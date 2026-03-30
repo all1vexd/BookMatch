@@ -8,7 +8,7 @@ import ru.itis.bookmatch.data.GoogleBooksResponse
 interface GoogleBooksApi {
 
     @GET("volumes")
-    suspend fun getBook(
+    suspend fun getBookForSwipe(
         @Query("q") query: String = "subject:fiction",
         @Query("maxResults") maxResults: Int = 20,
         @Query("key") apiKey: String = BuildConfig.GOOGLE_BOOKS_API_KEY
