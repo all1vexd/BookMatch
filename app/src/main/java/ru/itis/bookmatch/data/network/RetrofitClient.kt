@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    private val BASE_URL = BuildConfig.GOOGLE_BOOKS_API_BASE_URL
+    private const val BASE_URL = BuildConfig.GOOGLE_BOOKS_API_BASE_URL
 
     private val client = OkHttpClient.Builder()
         .writeTimeout(60, TimeUnit.SECONDS)

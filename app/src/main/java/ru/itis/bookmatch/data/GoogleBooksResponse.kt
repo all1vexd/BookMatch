@@ -20,26 +20,26 @@ data class BookItem(
 
 data class VolumeInfo(
     @SerializedName("title")
-    val title: String,
+    val title: String? = null,
     @SerializedName("authors")
-    val authors: List<String>,
+    val authors: List<String>? = null,
     @SerializedName("description")
-    val description: String,
+    val description: String? = null,
     @SerializedName("categories")
-    val categories: List<String>,
+    val categories: List<String>? = null,
     @SerializedName("publishedDate")
-    val publishedDate: String,
+    val publishedDate: String? = null,
     @SerializedName("pageCount")
-    val pageCount: Int,
+    val pageCount: Int? = null,
     @SerializedName("averageRating")
-    val averageRating: Double,
+    val averageRating: Double? = null,
     @SerializedName("imageLinks")
-    val imageLinks: ImageLinks
+    val imageLinks: ImageLinks? = null
 )
 
 data class ImageLinks(
     @SerializedName("thumbnail")
-    val thumbnail: String,
+    val thumbnail: String? = null,
     @SerializedName("smallThumbnail")
-    val smallThumbnail: String
+    val smallThumbnail: String? = null
 )
