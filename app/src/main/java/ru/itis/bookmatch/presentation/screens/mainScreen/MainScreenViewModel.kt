@@ -11,7 +11,8 @@ import ru.itis.bookmatch.domain.Book
 import ru.itis.bookmatch.domain.GetBooksForSwipeUseCase
 
 class MainScreenViewModel(
-    private val getBooksForSwipeUseCase: GetBooksForSwipeUseCase
+    private val getBooksForSwipeUseCase: GetBooksForSwipeUseCase,
+    private val onBookLiked: (Book) -> Unit
 ): ViewModel() {
 
     private val _state = MutableStateFlow<MainScreenState>(MainScreenState.Loading)
@@ -45,6 +46,7 @@ class MainScreenViewModel(
                 if (currentState is MainScreenState.Content) {
                     val currentBook = currentState.bookList.getOrNull(currentState.currentIndex)
                     if (currentBook != null) {
+                        onBookLiked(currentBook)
                         _state.update { state ->
                             if (state is MainScreenState.Content) {
                                 state.copy(

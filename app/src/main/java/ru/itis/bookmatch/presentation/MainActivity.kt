@@ -1,4 +1,4 @@
-package ru.itis.bookmatch
+package ru.itis.bookmatch.presentation
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import ru.itis.bookmatch.data.BookRepositoryImpl
 import ru.itis.bookmatch.domain.GetBooksForSwipeUseCase
-import ru.itis.bookmatch.presentation.screens.mainScreen.MainScreen
 import ru.itis.bookmatch.ui.theme.BookMatchTheme
 
 class MainActivity : ComponentActivity() {
@@ -18,9 +17,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             BookMatchTheme {
-                MainScreen(
-                    getBooksForSwipeUseCase = getBooksForSwipeUseCase
-                )
+                BookMatchApp()
             }
         }
     }
