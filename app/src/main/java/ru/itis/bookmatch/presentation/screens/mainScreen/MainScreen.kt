@@ -48,6 +48,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -55,15 +56,19 @@ import coil.compose.AsyncImage
 import ru.itis.bookmatch.data.toHighQualityUrl
 import ru.itis.bookmatch.domain.Book
 import ru.itis.bookmatch.domain.GetBooksForSwipeUseCase
+import ru.itis.bookmatch.presentation.screens.BottomBar
+import ru.itis.bookmatch.presentation.screens.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     getBooksForSwipeUseCase: GetBooksForSwipeUseCase,
+    onBookLiked: (Book) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MainScreenViewModel = viewModel() {
         MainScreenViewModel(
-            getBooksForSwipeUseCase = getBooksForSwipeUseCase
+            getBooksForSwipeUseCase = getBooksForSwipeUseCase,
+            onBookLiked = onBookLiked
         )
     }
 ) {
@@ -73,18 +78,14 @@ fun MainScreen(
         topBar = {
             MainTopBar()
         },
-        bottomBar = {
-            BottomBar()
-        },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-
         Box(
+            contentAlignment = Alignment.Center,
             modifier = modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            contentAlignment = Alignment.Center
+                .padding(horizontal = 16.dp)
         ) {
             when (state) {
                 MainScreenState.Loading -> {
@@ -131,6 +132,7 @@ fun MainScreen(
 
                     if (currentBook != null) {
                         CardStack(
+                            modifier = Modifier.padding(top = 16.dp),
                             book = currentBook,
                             onSwipeLeft = {
                                 viewModel.processCommand(MainScreenCommand.LeftSwipe)
@@ -229,136 +231,6 @@ fun MainTopBar(
         )
     }
 
-}
-
-@Composable
-fun BottomBar(
-    modifier: Modifier = Modifier
-) {
-
-    Column {
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(MaterialTheme.colorScheme.onSurface.copy(0.3f))
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        NavigationBar(
-            containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.8f),
-            tonalElevation = 0.dp,
-            modifier = modifier
-                .fillMaxWidth()
-                .height(80.dp)
-        ) {
-            NavigationBarItem(
-                selected = true,
-                onClick = {},
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.MenuBook,
-                        contentDescription = "Discover",
-                        modifier = Modifier.size(24.dp)
-                    )
-                },
-                label = {
-                    Text(
-                        text = "DISCOVER",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 0.5.sp
-                    )
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-            )
-
-            NavigationBarItem(
-                selected = false,
-                onClick = {},
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Bookmark,
-                        contentDescription = "Saved",
-                        modifier = Modifier.size(24.dp)
-                    )
-                },
-                label = {
-                    Text(
-                        text = "SAVED",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 0.5.sp
-                    )
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-            )
-
-            NavigationBarItem(
-                selected = false,
-                onClick = {},
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.AutoStories,
-                        contentDescription = "Library",
-                        modifier = Modifier.size(24.dp)
-                    )
-                },
-                label = {
-                    Text(
-                        text = "LIBRARY",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 0.5.sp
-                    )
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-            )
-
-            NavigationBarItem(
-                selected = false,
-                onClick = {},
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Profile",
-                        modifier = Modifier.size(24.dp)
-                    )
-                },
-                label = {
-                    Text(
-                        text = "PROFILE",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 0.5.sp
-                    )
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-            )
-        }
-    }
 }
 
 @Composable
@@ -467,7 +339,7 @@ fun CardStack(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -478,7 +350,7 @@ fun CardStack(
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -512,7 +384,7 @@ fun CardStack(
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 4,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        overflow = TextOverflow.Ellipsis,
                         lineHeight = 16.sp
                     )
                 }
