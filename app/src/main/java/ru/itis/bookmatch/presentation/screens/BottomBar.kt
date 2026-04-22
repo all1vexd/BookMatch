@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -31,7 +32,7 @@ fun BottomBar(
     modifier: Modifier = Modifier,
 ) {
 
-    val screens = listOf(Screen.Discover, Screen.Saved, Screen.Library, Screen.Profile)
+    val screens = listOf(Screen.Discover(), Screen.Saved(), Screen.Library(), Screen.Profile())
 
     Column {
 
@@ -60,7 +61,7 @@ fun BottomBar(
                     },
                     icon = {
                         Icon(
-                            imageVector = screen.icon,
+                            imageVector = screen.icon ?: Icons.Default.QuestionMark,
                             contentDescription = screen.title,
                             modifier = Modifier.height(24.dp)
                         )

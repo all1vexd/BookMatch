@@ -7,9 +7,42 @@ import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.graphics.vector.ImageVector
 
-sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
-    data object Discover : Screen("discover", "Discover", Icons.Default.MenuBook)
-    data object Saved : Screen("saved", "Saved", Icons.Default.Bookmark)
-    data object Library : Screen("library", "Library", Icons.Default.AutoStories)
-    data object Profile : Screen("profile", "Profile", Icons.Default.Person)
+sealed class Screen(
+    open val route: String,
+    open val title: String = "",
+    open val icon: ImageVector? = null
+) {
+    data class Discover(
+        override val route: String = "discover",
+        override val title: String = "Discover",
+        override val icon: ImageVector = Icons.Default.MenuBook
+    ) : Screen(route = route, title, icon)
+
+    data class Saved(
+        override val route: String = "saved",
+        override val title: String = "Saved",
+        override val icon: ImageVector = Icons.Default.Bookmark
+    ) : Screen(route, title, icon)
+
+    data class Library(
+        override val route: String = "library",
+        override val title: String = "Library",
+        override val icon: ImageVector = Icons.Default.AutoStories
+    ) : Screen(route, title, icon)
+
+    data class Profile(
+        override val route: String = "profile",
+        override val title: String = "Profile",
+        override val icon: ImageVector = Icons.Default.Person
+    ) : Screen(route, title, icon)
+
+    object Registration : Screen(
+        route = "registration",
+        title = "Registration"
+    )
+
+    object Login : Screen(
+        route = "login",
+        title = "Login"
+    )
 }
