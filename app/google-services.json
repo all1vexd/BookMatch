@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "36317169826",
+    "project_id": "book06092006",
+    "storage_bucket": "book06092006.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:36317169826:android:30ba7d5e6338ddb921effb",
+        "android_client_info": {
+          "package_name": "ru.itis.bookmatch"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATioWMQvpZ7rv07yyMMcQnjcTgbD4A8ew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
