@@ -56,19 +56,22 @@ import coil.compose.AsyncImage
 import ru.itis.bookmatch.data.toHighQualityUrl
 import ru.itis.bookmatch.domain.Book
 import ru.itis.bookmatch.domain.GetBooksForSwipeUseCase
+import ru.itis.bookmatch.domain.likedUseCase.AddToLikedUseCase
 import ru.itis.bookmatch.presentation.screens.BottomBar
 import ru.itis.bookmatch.presentation.screens.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
+    userId: String,
     getBooksForSwipeUseCase: GetBooksForSwipeUseCase,
-    onBookLiked: (Book) -> Unit,
+    addToLikedUseCase: AddToLikedUseCase,
     modifier: Modifier = Modifier,
     viewModel: MainScreenViewModel = viewModel() {
         MainScreenViewModel(
+            userId = userId,
             getBooksForSwipeUseCase = getBooksForSwipeUseCase,
-            onBookLiked = onBookLiked
+            addToLikedUseCase = addToLikedUseCase
         )
     }
 ) {

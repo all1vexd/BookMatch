@@ -1,5 +1,7 @@
 package ru.itis.bookmatch.presentation.screens.login
 
+import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,14 +28,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.collectLatest
-import ru.itis.bookmatch.presentation.screens.registration.RegistrationScreenCommand.EmailInput
-import ru.itis.bookmatch.presentation.screens.registration.RegistrationScreenState
 
 @Composable
 fun LoginScreen(
+    context: Context,
     modifier: Modifier = Modifier,
-    viewModel: LoginScreenViewModel = viewModel(),
-    login: () -> Unit,
+    viewModel: LoginScreenViewModel = viewModel() {
+        LoginScreenViewModel(
+            context = context
+        )
+    },
+    login: (String) -> Unit,
     moveToRegister: () -> Unit
 ) {
 
@@ -51,7 +56,8 @@ fun LoginScreen(
     LaunchedEffect(Unit) {
         viewModel.state.collectLatest { currentState ->
             if (currentState is LoginScreenState.Success) {
-                login()
+                login(currentState.user.uid)
+                Log.d("LoginScreen", "userId = ${currentState.user.uid}")
             }
         }
     }

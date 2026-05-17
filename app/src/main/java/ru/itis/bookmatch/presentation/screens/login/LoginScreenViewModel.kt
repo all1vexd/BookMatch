@@ -1,17 +1,22 @@
 package ru.itis.bookmatch.presentation.screens.login
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import ru.itis.bookmatch.data.repository.AuthRepositoryImpl
+import ru.itis.bookmatch.data.repository.LikedBooksRepositoryImpl
+import ru.itis.bookmatch.domain.AuthUser
+import ru.itis.bookmatch.domain.LoginUseCase
+import ru.itis.bookmatch.domain.SyncUseCase
 
 class LoginScreenViewModel(
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    context: Context,
+    private val loginUseCase: LoginUseCase = LoginUseCase(AuthRepositoryImpl()),
+    private val syncUseCase: SyncUseCase = SyncUseCase(LikedBooksRepositoryImpl(context))
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<LoginScreenState>(LoginScreenState.Content(
@@ -34,54 +39,40 @@ class LoginScreenViewModel(
         }
     }
 
-    fun loginUser() {
-        val currentState = _state.value
-        if (currentState is LoginScreenState.Content) {
-            val email = currentState.email
-            val password = currentState.password
+    private fun loginUser() {
+        val currentState = _state.value as? LoginScreenState.Content ?: return
+        val email = currentState.email
+        val password = currentState.password
 
-            when {
-                email.isEmpty() -> {
-                    _state.update {
-                        LoginScreenState.Error("Введите email")
-                    }
-                }
-                password.isEmpty() -> {
-                    _state.update {
-                        LoginScreenState.Error("Введите пароль")
-                    }
-                    return
-                }
-                !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
-                    _state.update {
-                        LoginScreenState.Error("Введите корректный email")
-                    }
-                    return
-                }
+        when {
+            email.isEmpty() -> {
+                _state.update { LoginScreenState.Error("Введите email") }
+                return
             }
-
-            viewModelScope.launch {
-                _state.update { LoginScreenState.Loading }
-
-                try {
-                    val result = auth.signInWithEmailAndPassword(email, password).await()
-                    val user = result.user
-
-                    if (user != null) {
-                        _state.update { LoginScreenState.Success(user) }
-                    } else {
-                        _state.update { LoginScreenState.Error("Ошибка при входе") }
-                    }
-                } catch (e: Exception) {
-                    _state.update {
-                        LoginScreenState.Error(e.message ?: "")
-                    }
-                }
+            password.isEmpty() -> {
+                _state.update { LoginScreenState.Error("Введите пароль") }
+                return
+            }
+            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                _state.update { LoginScreenState.Error("Введите корректный email") }
+                return
             }
         }
+
+        viewModelScope.launch {
+            _state.update { LoginScreenState.Loading }
+            try {
+                val user = loginUseCase(email, password)
+                syncUseCase(userId = user.uid)
+                _state.update { LoginScreenState.Success(user) }
+            } catch (e: Exception) {
+                _state.update { LoginScreenState.Error(e.message ?: "Ошибка при входе") }
+            }
+        }
+
     }
 
-    fun updateState(email: String? = null, password: String? = null) {
+    private fun updateState(email: String? = null, password: String? = null) {
 
         val currentState = _state.value
         val currentEmail = if (currentState is LoginScreenState.Content) {
@@ -117,5 +108,5 @@ sealed interface LoginScreenState {
 
     data object Loading : LoginScreenState
 
-    data class Success(val user: FirebaseUser) : LoginScreenState
+    data class Success(val user: AuthUser) : LoginScreenState
 }

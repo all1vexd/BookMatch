@@ -33,7 +33,7 @@ import ru.itis.bookmatch.presentation.screens.registration.RegistrationScreenCom
 fun RegistrationScreen(
     modifier: Modifier = Modifier,
     viewModel: RegistrationScreenViewModel = viewModel(),
-    register: () -> Unit,
+    register: (String) -> Unit,
     moveToLogin: () -> Unit
 ) {
 
@@ -51,7 +51,7 @@ fun RegistrationScreen(
     LaunchedEffect(Unit) {
         viewModel.state.collectLatest { currentState ->
             if (currentState is RegistrationScreenState.Success) {
-                register()
+                register(currentState.user.uid)
             }
         }
     }

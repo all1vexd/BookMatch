@@ -9,10 +9,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.itis.bookmatch.domain.Book
 import ru.itis.bookmatch.domain.GetBooksForSwipeUseCase
+import ru.itis.bookmatch.domain.likedUseCase.AddToLikedUseCase
 
 class MainScreenViewModel(
+    private val userId: String,
     private val getBooksForSwipeUseCase: GetBooksForSwipeUseCase,
-    private val onBookLiked: (Book) -> Unit
+    private val addToLikedUseCase: AddToLikedUseCase
 ): ViewModel() {
 
     private val _state = MutableStateFlow<MainScreenState>(MainScreenState.Loading)
@@ -32,7 +34,6 @@ class MainScreenViewModel(
                     currentIndex = 0
                 )
             } catch (e: Exception) {
-                Log.e("TAPI_TES", "Error: ${e.message}")
                 _state.value = MainScreenState.Error
             }
         }
@@ -42,22 +43,13 @@ class MainScreenViewModel(
         when (command) {
 
             MainScreenCommand.RightSwipe -> {
-                val currentState = _state.value
-                if (currentState is MainScreenState.Content) {
-                    val currentBook = currentState.bookList.getOrNull(currentState.currentIndex)
-                    if (currentBook != null) {
-                        onBookLiked(currentBook)
-                        _state.update { state ->
-                            if (state is MainScreenState.Content) {
-                                state.copy(
-                                    likedBooks = state.likedBooks + currentBook
-                                )
-                            } else {
-                                state
-                            }
-                        }
+                val currentState = _state.value as? MainScreenState.Content ?: return
+                val currentBook = currentState.bookList.getOrNull(currentState.currentIndex)
+                goToNextBook()
+                if (currentBook != null) {
+                    viewModelScope.launch {
+                        addToLikedUseCase(userId, currentBook)
                     }
-                    goToNextBook()
                 }
             }
 

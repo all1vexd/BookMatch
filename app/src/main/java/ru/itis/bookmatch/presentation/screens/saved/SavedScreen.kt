@@ -20,8 +20,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,73 +45,120 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import ru.itis.bookmatch.data.toHighQualityUrl
 import ru.itis.bookmatch.domain.Book
+import ru.itis.bookmatch.domain.likedUseCase.GetLikedBooksUseCase
+import ru.itis.bookmatch.domain.likedUseCase.RemoveFromLikedBooksUseCase
 
 @Composable
 fun SavedScreen(
-    likedBooks: List<Book> = emptyList(),
-    onRemoveBook: (Book) -> Unit = {},
-    onBookClick: (String) -> Unit = {}
+    userId: String,
+    removeFromLikedBooksUseCase: RemoveFromLikedBooksUseCase,
+    getLikedBooksUseCase: GetLikedBooksUseCase,
+    onBookClick: (String) -> Unit = {},
+    viewModel: SavedScreenViewModel = viewModel() {
+        SavedScreenViewModel(
+            userId = userId,
+            removeFromLikedBooksUseCase = removeFromLikedBooksUseCase,
+            getLikedBooksUseCase = getLikedBooksUseCase
+        )
+    }
 ) {
-    Scaffold(
-        topBar = {
-            SavedTopBar()
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { paddingValues ->
 
-        if (likedBooks.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Bookmark,
-                        contentDescription = "No saved books",
-                        modifier = Modifier.size(80.dp),
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "No saved books yet",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Swipe right on books to save them",
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(likedBooks) { book ->
-                    SavedBookCard(
-                        book = book,
-                        onRemove = { onRemoveBook(book) },
-                        onClick = { onBookClick(book.id) }
-                    )
+
+    val state by viewModel.state.collectAsState()
+
+    when (state) {
+        is SavedScreenState.Content -> {
+            Scaffold(
+                topBar = {
+                    SavedTopBar()
+                },
+                containerColor = MaterialTheme.colorScheme.background
+            ) { paddingValues ->
+
+                if ((state as SavedScreenState.Content).likedBooks.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Bookmark,
+                                contentDescription = "No saved books",
+                                modifier = Modifier.size(80.dp),
+                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "No saved books yet",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Swipe right on books to save them",
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items((state as SavedScreenState.Content).likedBooks) { book ->
+                            SavedBookCard(
+                                book = book,
+                                onRemove = {
+                                    viewModel.processCommand(SavedScreenCommand.RemoveBook(book.id))
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
+        is SavedScreenState.Error -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Error: ${(state as SavedScreenState.Error).errorMessage}",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = { viewModel.loadData() }) {
+                        Text("Retry")
+                    }
+                }
+            }
+        }
+        SavedScreenState.Loading -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
     }
+
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -152,8 +202,7 @@ fun SavedTopBar() {
 @Composable
 fun SavedBookCard(
     book: Book,
-    onRemove: () -> Unit,
-    onClick: () -> Unit
+    onRemove: (Book) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -171,7 +220,6 @@ fun SavedBookCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Обложка книги
             val imageUrl = toHighQualityUrl(book.thumbnailUrl)
             AsyncImage(
                 model = imageUrl,
@@ -184,7 +232,6 @@ fun SavedBookCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Информация о книге
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -249,9 +296,8 @@ fun SavedBookCard(
                 }
             }
 
-            // Кнопка удаления
             IconButton(
-                onClick = onRemove,
+                onClick = { onRemove(book) },
                 modifier = Modifier.size(40.dp)
             ) {
                 Icon(

@@ -1,18 +1,17 @@
 package ru.itis.bookmatch.presentation.screens.registration
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import ru.itis.bookmatch.data.repository.AuthRepositoryImpl
+import ru.itis.bookmatch.domain.AuthUser
+import ru.itis.bookmatch.domain.RegisterUseCase
 
 class RegistrationScreenViewModel(
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val registerUseCase: RegisterUseCase = RegisterUseCase(AuthRepositoryImpl())
 ): ViewModel() {
 
     private val _state = MutableStateFlow<RegistrationScreenState>(RegistrationScreenState.Content(
@@ -37,69 +36,63 @@ class RegistrationScreenViewModel(
         }
     }
 
-    fun registerUser() {
+    private fun registerUser() {
 
-        val currentState = _state.value
-        if (currentState is RegistrationScreenState.Content) {
-            val email = currentState.email
-            val password = currentState.password
-
-            when {
-                email.isEmpty() -> {
-                    _state.update {
-                        RegistrationScreenState.Error("Введите email")
-                    }
-                    return
+        val currentState = _state.value as? RegistrationScreenState.Content ?: return
+        val email = currentState.email
+        val password = currentState.password
+        when {
+            email.isEmpty() -> {
+                _state.update {
+                    RegistrationScreenState.Error("Введите email")
                 }
-
-                password.isEmpty() -> {
-                    _state.update {
-                        RegistrationScreenState.Error("Введите пароль")
-                    }
-                    return
-                }
-
-                password.length < 6 -> {
-                    _state.update {
-                        RegistrationScreenState.Error("Пароль должен содержать минимум 6 символов")
-                    }
-                    return
-                }
-
-                !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
-                    _state.update {
-                        RegistrationScreenState.Error("Введите корректный email")
-                    }
-                    return
-                }
+                return
             }
 
-            viewModelScope.launch {
-                _state.update { RegistrationScreenState.Loading }
+            password.isEmpty() -> {
+                _state.update {
+                    RegistrationScreenState.Error("Введите пароль")
+                }
+                return
+            }
 
-                try {
-                    val result = auth.createUserWithEmailAndPassword(email, password).await()
-                    val user = result.user
+            password.length < 6 -> {
+                _state.update {
+                    RegistrationScreenState.Error("Пароль должен содержать минимум 6 символов")
+                }
+                return
+            }
 
-                    if (user != null) {
-                        _state.update {
-                            RegistrationScreenState.Success(user)
-                        }
-                    } else {
-                        _state.update {
-                            RegistrationScreenState.Error("Ошибка при регистрации")
-                        }
-                    }
-                } catch (e: Exception) {
-                    _state.update {
-                        RegistrationScreenState.Error(e.message ?: "")
-                    }
+            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                _state.update {
+                    RegistrationScreenState.Error("Введите корректный email")
+                }
+                return
+            }
+        }
+
+
+
+        viewModelScope.launch {
+            _state.update {
+                RegistrationScreenState.Loading
+            }
+            try {
+                val user = registerUseCase(email, password)
+                _state.update {
+                    RegistrationScreenState.Success(user)
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    RegistrationScreenState.Error(
+                        message = e.message ?: "Ошибка при регистрации"
+                    )
                 }
             }
         }
     }
 
-    fun updateState(email: String? = null, password: String? = null) {
+    private fun updateState(email: String? = null, password: String? = null) {
 
         val currentState = _state.value
         val currentEmail =  if (currentState is RegistrationScreenState.Content) {
@@ -139,7 +132,7 @@ sealed interface RegistrationScreenState{
 
     data object Loading: RegistrationScreenState
 
-    data class Success(val user: FirebaseUser): RegistrationScreenState
+    data class Success(val user: AuthUser): RegistrationScreenState
 }
 
 
