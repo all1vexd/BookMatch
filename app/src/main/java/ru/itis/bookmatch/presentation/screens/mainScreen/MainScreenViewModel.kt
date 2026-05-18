@@ -1,19 +1,30 @@
 package ru.itis.bookmatch.presentation.screens.mainScreen
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.itis.bookmatch.domain.Book
 import ru.itis.bookmatch.domain.GetBooksForSwipeUseCase
+import ru.itis.bookmatch.domain.likedUseCase.AddToLikedUseCase
 
-class MainScreenViewModel(
+class MainScreenViewModel @AssistedInject constructor(
+    @Assisted("userId") private val userId: String,
     private val getBooksForSwipeUseCase: GetBooksForSwipeUseCase,
-    private val onBookLiked: (Book) -> Unit
+    private val addToLikedUseCase: AddToLikedUseCase
 ): ViewModel() {
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("userId") userId: String
+        ): MainScreenViewModel
+    }
 
     private val _state = MutableStateFlow<MainScreenState>(MainScreenState.Loading)
     val state = _state.asStateFlow()
@@ -32,7 +43,6 @@ class MainScreenViewModel(
                     currentIndex = 0
                 )
             } catch (e: Exception) {
-                Log.e("TAPI_TES", "Error: ${e.message}")
                 _state.value = MainScreenState.Error
             }
         }
@@ -42,22 +52,13 @@ class MainScreenViewModel(
         when (command) {
 
             MainScreenCommand.RightSwipe -> {
-                val currentState = _state.value
-                if (currentState is MainScreenState.Content) {
-                    val currentBook = currentState.bookList.getOrNull(currentState.currentIndex)
-                    if (currentBook != null) {
-                        onBookLiked(currentBook)
-                        _state.update { state ->
-                            if (state is MainScreenState.Content) {
-                                state.copy(
-                                    likedBooks = state.likedBooks + currentBook
-                                )
-                            } else {
-                                state
-                            }
-                        }
+                val currentState = _state.value as? MainScreenState.Content ?: return
+                val currentBook = currentState.bookList.getOrNull(currentState.currentIndex)
+                goToNextBook()
+                if (currentBook != null) {
+                    viewModelScope.launch {
+                        addToLikedUseCase(userId, currentBook)
                     }
-                    goToNextBook()
                 }
             }
 

@@ -22,20 +22,31 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.collectLatest
-import ru.itis.bookmatch.presentation.screens.login.LoginScreenState
+import ru.itis.bookmatch.BookMatchApplication
 import ru.itis.bookmatch.presentation.screens.registration.RegistrationScreenCommand.*
 
 @Composable
 fun RegistrationScreen(
     modifier: Modifier = Modifier,
-    viewModel: RegistrationScreenViewModel = viewModel(),
-    register: () -> Unit,
+    register: (String) -> Unit,
     moveToLogin: () -> Unit
 ) {
+    val context = LocalContext.current
+    val appComponent = (context.applicationContext as BookMatchApplication).appComponent
+    val viewModel: RegistrationScreenViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return appComponent.registrationScreenViewModel() as T
+            }
+        }
+    )
 
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -51,7 +62,7 @@ fun RegistrationScreen(
     LaunchedEffect(Unit) {
         viewModel.state.collectLatest { currentState ->
             if (currentState is RegistrationScreenState.Success) {
-                register()
+                register(currentState.user.uid)
             }
         }
     }

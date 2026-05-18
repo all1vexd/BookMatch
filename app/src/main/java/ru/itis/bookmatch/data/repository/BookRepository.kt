@@ -1,4 +1,4 @@
-package ru.itis.bookmatch.data
+package ru.itis.bookmatch.data.repository
 
 import ru.itis.bookmatch.domain.Book
 

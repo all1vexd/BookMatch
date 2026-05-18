@@ -1,10 +1,9 @@
 package ru.itis.bookmatch.domain
 
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import ru.itis.bookmatch.data.BookRepository
+import ru.itis.bookmatch.data.repository.BookRepository
+import javax.inject.Inject
 
-class GetBooksForSwipeUseCase(
+class GetBooksForSwipeUseCase @Inject constructor(
     private val repository: BookRepository
 ) {
 

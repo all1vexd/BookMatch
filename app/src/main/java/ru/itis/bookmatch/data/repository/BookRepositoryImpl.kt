@@ -1,7 +1,7 @@
-package ru.itis.bookmatch.data
+package ru.itis.bookmatch.data.repository
 
-import android.util.Log
 import ru.itis.bookmatch.data.network.RetrofitClient
+import ru.itis.bookmatch.data.toBook
 import ru.itis.bookmatch.domain.Book
 
 class BookRepositoryImpl: BookRepository {
@@ -10,7 +10,6 @@ class BookRepositoryImpl: BookRepository {
 
     override suspend fun getBookForSwipe(): List<Book> {
         val response = api.getBookForSwipe()
-        Log.d("API_TEST", "Books count: ${response.items.size}")
         return response.items.map {
             it.toBook()
         }

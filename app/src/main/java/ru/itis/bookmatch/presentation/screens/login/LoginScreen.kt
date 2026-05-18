@@ -1,5 +1,6 @@
 package ru.itis.bookmatch.presentation.screens.login
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,20 +23,30 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.collectLatest
-import ru.itis.bookmatch.presentation.screens.registration.RegistrationScreenCommand.EmailInput
-import ru.itis.bookmatch.presentation.screens.registration.RegistrationScreenState
+import ru.itis.bookmatch.BookMatchApplication
 
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    viewModel: LoginScreenViewModel = viewModel(),
-    login: () -> Unit,
+    login: (String) -> Unit,
     moveToRegister: () -> Unit
 ) {
+    val context = LocalContext.current
+    val appComponent = (context.applicationContext as BookMatchApplication).appComponent
+    val viewModel: LoginScreenViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return appComponent.loginScreenViewModel() as T
+            }
+        }
+    )
 
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -51,7 +62,8 @@ fun LoginScreen(
     LaunchedEffect(Unit) {
         viewModel.state.collectLatest { currentState ->
             if (currentState is LoginScreenState.Success) {
-                login()
+                login(currentState.user.uid)
+                Log.d("LoginScreen", "userId = ${currentState.user.uid}")
             }
         }
     }

@@ -1,5 +1,6 @@
 package ru.itis.bookmatch.presentation.screens
 
+import android.os.Bundle
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Bookmark
@@ -8,35 +9,56 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class Screen(
-    open val route: String,
-    open val title: String = "",
-    open val icon: ImageVector? = null
+    val route: String,
+    val title: String,
+    val icon: ImageVector? = null
 ) {
-    data class Discover(
-        override val route: String = "discover",
-        override val title: String = "Discover",
-        override val icon: ImageVector = Icons.Default.MenuBook
-    ) : Screen(route = route, title, icon)
 
-    data class Saved(
-        override val route: String = "saved",
-        override val title: String = "Saved",
-        override val icon: ImageVector = Icons.Default.Bookmark
-    ) : Screen(route, title, icon)
+    data object Discover: Screen(
+        route = "discover/{user_id}",
+        title = "Discover",
+        icon = Icons.Default.MenuBook
+    ) {
+        fun createRoute(userId: String): String {
+            return "discover/$userId"
+        }
 
-    data class Library(
-        override val route: String = "library",
-        override val title: String = "Library",
-        override val icon: ImageVector = Icons.Default.AutoStories
-    ) : Screen(route, title, icon)
+        fun getUserId(arguments: Bundle?): String {
+            return arguments?.getString("user_id") ?: ""
+        }
+    }
 
-    data class Profile(
-        override val route: String = "profile",
-        override val title: String = "Profile",
-        override val icon: ImageVector = Icons.Default.Person
-    ) : Screen(route, title, icon)
+    data object Saved: Screen(
+        route = "saved/{user_id}",
+        title = "Saved",
+        icon = Icons.Default.Bookmark
+    ) {
+        fun createRoute(userId: String): String {
+            return "saved/$userId"
+        }
+    }
 
-    object Registration : Screen(
+    data object Library: Screen(
+        route = "library/{user_id}",
+        title = "Library",
+        icon = Icons.Default.AutoStories
+    ) {
+        fun createRoute(userId: String): String {
+            return "library/$userId"
+        }
+    }
+
+    data object Profile: Screen(
+        route = "profile/{user_id}",
+        title = "Profile",
+        icon = Icons.Default.Person
+    )  {
+        fun createRoute(userId: String): String {
+            return "profile/$userId"
+        }
+    }
+
+    data object Registration: Screen(
         route = "registration",
         title = "Registration"
     )

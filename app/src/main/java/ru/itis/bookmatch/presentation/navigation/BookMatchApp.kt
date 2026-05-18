@@ -8,13 +8,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import ru.itis.bookmatch.data.BookRepositoryImpl
-import ru.itis.bookmatch.domain.Book
-import ru.itis.bookmatch.domain.GetBooksForSwipeUseCase
 import ru.itis.bookmatch.presentation.screens.BottomBar
 import ru.itis.bookmatch.presentation.screens.Screen
 import ru.itis.bookmatch.presentation.screens.library.LibraryScreen
@@ -28,16 +25,19 @@ import ru.itis.bookmatch.presentation.screens.saved.SavedScreen
 fun BookMatchApp() {
     val navController = rememberNavController()
 
+    var currentUserId by remember { mutableStateOf("") }
     var currentRoute by remember {
-        mutableStateOf(Screen.Discover().route)
+        mutableStateOf(Screen.Discover.route)
     }
-    var likedBooks by remember { mutableStateOf<List<Book>>(emptyList()) }
 
     navController.addOnDestinationChangedListener { _, destination, _ ->
-        currentRoute = destination.route ?: Screen.Discover().route
+        currentRoute = destination.route ?: Screen.Discover.route
     }
 
-    val screensForBottomBar = listOf(Screen.Discover().route, Screen.Saved().route, Screen.Library().route, Screen.Profile().route)
+    val shouldShowBottomBar = currentRoute.startsWith("discover/") ||
+            currentRoute.startsWith("saved/") ||
+            currentRoute.startsWith("library/") ||
+            currentRoute.startsWith("profile/")
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -50,7 +50,8 @@ fun BookMatchApp() {
             composable(Screen.Login.route) {
                 LoginScreen(
                     login = {
-                        navController.navigate(Screen.Discover().route) {
+                        currentUserId = it
+                        navController.navigate(Screen.Discover.createRoute(it)) {
                             popUpTo(Screen.Login.route) {
                                 inclusive = true
                             }
@@ -64,7 +65,8 @@ fun BookMatchApp() {
             composable(Screen.Registration.route) {
                 RegistrationScreen(
                     register = {
-                        navController.navigate(Screen.Discover().route) {
+                        currentUserId = it
+                        navController.navigate(Screen.Discover.createRoute(it)) {
                             popUpTo(Screen.Registration.route) {
                                 inclusive = true
                             }
@@ -75,54 +77,67 @@ fun BookMatchApp() {
                     }
                 )
             }
-            composable(Screen.Discover().route) {
+            composable(Screen.Discover.route) {
                 MainScreen(
-                    getBooksForSwipeUseCase = GetBooksForSwipeUseCase(BookRepositoryImpl()),
-                    onBookLiked = {
-                        if (!likedBooks.contains(it)) {
-                            likedBooks = likedBooks + it
-                        }
-                    }
+                    userId = currentUserId
                 )
             }
-            composable(Screen.Saved().route) {
+            composable(Screen.Saved.route) {
                 SavedScreen(
-                    likedBooks = likedBooks,
-                    onRemoveBook = { book ->
-                        likedBooks = likedBooks - book
-                    },
+                    userId = currentUserId,
                     onBookClick = { bookId ->
                         TODO("Сделать")
                     }
                 )
             }
-            composable(Screen.Library().route) {
+            composable(Screen.Library.route) {
                 LibraryScreen()
             }
-            composable(Screen.Profile().route) {
+            composable(Screen.Profile.route) {
                 ProfileScreen()
             }
         }
 
-        if (screensForBottomBar.contains(currentRoute)) {
+        if (shouldShowBottomBar) {
             BottomBar(
-                selected = when (currentRoute) {
-                    Screen.Discover().route -> Screen.Discover()
-                    Screen.Saved().route -> Screen.Saved()
-                    Screen.Library().route -> Screen.Library()
-                    Screen.Profile().route -> Screen.Profile()
-                    else -> Screen.Discover()
+                selected = when {
+                    currentRoute.startsWith("discover/") -> Screen.Discover
+                    currentRoute.startsWith("saved/") -> Screen.Saved
+                    currentRoute.startsWith("library/") -> Screen.Library
+                    currentRoute.startsWith("profile/") -> Screen.Profile
+                    else -> Screen.Discover
                 },
                 onTabSelected = { screen ->
-                    navController.navigate(screen.route) {
-                        popUpTo(Screen.Discover().route) {
-                            saveState = true
+                    val route = when (screen) {
+                        is Screen.Discover -> {
+                            screen.createRoute(currentUserId)
                         }
-                        launchSingleTop = true
-                        restoreState = true
+                        is Screen.Library -> {
+                            screen.createRoute(currentUserId)
+                        }
+                        is Screen.Profile -> {
+                            screen.createRoute(currentUserId)
+                        }
+                        is Screen.Saved -> {
+                            screen.createRoute(currentUserId)
+                        }
+                        else -> {
+                            screen.route
+                        }
                     }
+                    navigateOnBottomBar(navController, route)
                 }
             )
         }
+    }
+}
+
+fun navigateOnBottomBar(navController: NavHostController, route: String) {
+    navController.navigate(route) {
+        popUpTo(Screen.Discover.route) {
+            saveState = true
+        }
+        launchSingleTop = true
+        restoreState = true
     }
 }

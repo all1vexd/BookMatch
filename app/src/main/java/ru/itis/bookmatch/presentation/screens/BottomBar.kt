@@ -32,7 +32,7 @@ fun BottomBar(
     modifier: Modifier = Modifier,
 ) {
 
-    val screens = listOf(Screen.Discover(), Screen.Saved(), Screen.Library(), Screen.Profile())
+    val screens = listOf(Screen.Discover, Screen.Saved, Screen.Library, Screen.Profile)
 
     Column {
 
