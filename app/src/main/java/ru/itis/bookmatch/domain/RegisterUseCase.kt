@@ -1,8 +1,9 @@
 package ru.itis.bookmatch.domain
 
 import ru.itis.bookmatch.data.repository.AuthRepository
+import javax.inject.Inject
 
-class RegisterUseCase(
+class RegisterUseCase @Inject constructor(
     private val repository: AuthRepository
 ) {
 

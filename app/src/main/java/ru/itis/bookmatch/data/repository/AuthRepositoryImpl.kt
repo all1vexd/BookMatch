@@ -3,9 +3,10 @@ package ru.itis.bookmatch.data.repository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.tasks.await
 import ru.itis.bookmatch.domain.AuthUser
+import javax.inject.Inject
 
-class AuthRepositoryImpl(
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+class AuthRepositoryImpl @Inject constructor(
+    private val auth: FirebaseAuth
 ) : AuthRepository {
 
     override suspend fun login(email: String, password: String): AuthUser {

@@ -12,11 +12,11 @@ import ru.itis.bookmatch.data.repository.LikedBooksRepositoryImpl
 import ru.itis.bookmatch.domain.AuthUser
 import ru.itis.bookmatch.domain.LoginUseCase
 import ru.itis.bookmatch.domain.SyncUseCase
+import javax.inject.Inject
 
-class LoginScreenViewModel(
-    context: Context,
-    private val loginUseCase: LoginUseCase = LoginUseCase(AuthRepositoryImpl()),
-    private val syncUseCase: SyncUseCase = SyncUseCase(LikedBooksRepositoryImpl(context))
+class LoginScreenViewModel @Inject constructor(
+    private val loginUseCase: LoginUseCase,
+    private val syncUseCase: SyncUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<LoginScreenState>(LoginScreenState.Content(

@@ -1,8 +1,10 @@
 package ru.itis.bookmatch.presentation.screens.mainScreen
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -11,11 +13,18 @@ import ru.itis.bookmatch.domain.Book
 import ru.itis.bookmatch.domain.GetBooksForSwipeUseCase
 import ru.itis.bookmatch.domain.likedUseCase.AddToLikedUseCase
 
-class MainScreenViewModel(
-    private val userId: String,
+class MainScreenViewModel @AssistedInject constructor(
+    @Assisted("userId") private val userId: String,
     private val getBooksForSwipeUseCase: GetBooksForSwipeUseCase,
     private val addToLikedUseCase: AddToLikedUseCase
 ): ViewModel() {
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("userId") userId: String
+        ): MainScreenViewModel
+    }
 
     private val _state = MutableStateFlow<MainScreenState>(MainScreenState.Loading)
     val state = _state.asStateFlow()

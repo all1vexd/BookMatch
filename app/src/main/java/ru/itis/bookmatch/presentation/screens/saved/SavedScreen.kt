@@ -1,5 +1,6 @@
 package ru.itis.bookmatch.presentation.screens.saved
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,32 +42,35 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import ru.itis.bookmatch.BookMatchApplication
 import ru.itis.bookmatch.data.toHighQualityUrl
 import ru.itis.bookmatch.domain.Book
-import ru.itis.bookmatch.domain.likedUseCase.GetLikedBooksUseCase
-import ru.itis.bookmatch.domain.likedUseCase.RemoveFromLikedBooksUseCase
 
 @Composable
 fun SavedScreen(
     userId: String,
-    removeFromLikedBooksUseCase: RemoveFromLikedBooksUseCase,
-    getLikedBooksUseCase: GetLikedBooksUseCase,
     onBookClick: (String) -> Unit = {},
-    viewModel: SavedScreenViewModel = viewModel() {
-        SavedScreenViewModel(
-            userId = userId,
-            removeFromLikedBooksUseCase = removeFromLikedBooksUseCase,
-            getLikedBooksUseCase = getLikedBooksUseCase
-        )
-    }
 ) {
+    val context: Context = LocalContext.current
+    val appComponent = (context.applicationContext as BookMatchApplication).appComponent
 
+    val viewModel: SavedScreenViewModel = viewModel(
+        key = userId,
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return appComponent.savedScreenViewModelFactory().create(userId) as T
+            }
+        }
+    )
 
     val state by viewModel.state.collectAsState()
 

@@ -5,19 +5,19 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
-import ru.itis.bookmatch.data.BookDatabase
+import ru.itis.bookmatch.data.dao.LikedBookDao
 import ru.itis.bookmatch.data.entity.LikedBookEntity
 import ru.itis.bookmatch.data.toBookModel
 import ru.itis.bookmatch.data.toLikedEntity
 import ru.itis.bookmatch.domain.Book
+import javax.inject.Inject
 
-class LikedBooksRepositoryImpl (
+class LikedBooksRepositoryImpl @Inject constructor(
     context: Context,
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val firestore: FirebaseFirestore,
+    private val dao: LikedBookDao
 ): LikedBooksRepository {
     private val prefs = context.getSharedPreferences("syncTime", Context.MODE_PRIVATE)
-    private val database = BookDatabase.getInstance(context)
-    private val dao = database.likedBookDao()
 
     private fun getLastSyncTime(userId: String): Long {
         return prefs.getLong("last_sync_time_${userId}", 0L)

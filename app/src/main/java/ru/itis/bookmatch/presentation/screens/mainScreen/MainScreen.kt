@@ -47,12 +47,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import ru.itis.bookmatch.BookMatchApplication
 import ru.itis.bookmatch.data.toHighQualityUrl
 import ru.itis.bookmatch.domain.Book
 import ru.itis.bookmatch.domain.GetBooksForSwipeUseCase
@@ -64,17 +68,20 @@ import ru.itis.bookmatch.presentation.screens.Screen
 @Composable
 fun MainScreen(
     userId: String,
-    getBooksForSwipeUseCase: GetBooksForSwipeUseCase,
-    addToLikedUseCase: AddToLikedUseCase,
-    modifier: Modifier = Modifier,
-    viewModel: MainScreenViewModel = viewModel() {
-        MainScreenViewModel(
-            userId = userId,
-            getBooksForSwipeUseCase = getBooksForSwipeUseCase,
-            addToLikedUseCase = addToLikedUseCase
-        )
-    }
+    modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val appComponent = (context.applicationContext as BookMatchApplication).appComponent
+
+    val viewModel: MainScreenViewModel = viewModel(
+        key = userId,
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return appComponent.mainScreenViewModelFactory().create(userId) as T
+            }
+        }
+    )
+
     val state by viewModel.state.collectAsState()
 
     Scaffold(

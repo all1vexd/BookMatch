@@ -9,9 +9,10 @@ import kotlinx.coroutines.launch
 import ru.itis.bookmatch.data.repository.AuthRepositoryImpl
 import ru.itis.bookmatch.domain.AuthUser
 import ru.itis.bookmatch.domain.RegisterUseCase
+import javax.inject.Inject
 
-class RegistrationScreenViewModel(
-    private val registerUseCase: RegisterUseCase = RegisterUseCase(AuthRepositoryImpl())
+class RegistrationScreenViewModel @Inject constructor(
+    private val registerUseCase: RegisterUseCase
 ): ViewModel() {
 
     private val _state = MutableStateFlow<RegistrationScreenState>(RegistrationScreenState.Content(

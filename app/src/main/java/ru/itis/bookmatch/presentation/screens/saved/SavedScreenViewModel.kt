@@ -3,6 +3,9 @@ package ru.itis.bookmatch.presentation.screens.saved
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -11,13 +14,20 @@ import ru.itis.bookmatch.domain.Book
 import ru.itis.bookmatch.domain.likedUseCase.GetLikedBooksUseCase
 import ru.itis.bookmatch.domain.likedUseCase.RemoveFromLikedBooksUseCase
 import ru.itis.bookmatch.presentation.screens.mainScreen.MainScreenState
+import javax.inject.Inject
 
-class SavedScreenViewModel(
-    private val userId: String,
+class SavedScreenViewModel @AssistedInject constructor(
+    @Assisted("userId") private val userId: String,
     private val removeFromLikedBooksUseCase: RemoveFromLikedBooksUseCase,
     private val getLikedBooksUseCase: GetLikedBooksUseCase
 ): ViewModel() {
 
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("userId") userId: String
+        ): SavedScreenViewModel
+    }
     private val _state = MutableStateFlow<SavedScreenState>(SavedScreenState.Loading)
     val state = _state.asStateFlow()
 
