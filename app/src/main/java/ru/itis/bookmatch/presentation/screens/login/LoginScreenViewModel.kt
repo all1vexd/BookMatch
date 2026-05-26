@@ -1,22 +1,19 @@
 package ru.itis.bookmatch.presentation.screens.login
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.itis.bookmatch.data.repository.AuthRepositoryImpl
-import ru.itis.bookmatch.data.repository.LikedBooksRepositoryImpl
 import ru.itis.bookmatch.domain.AuthUser
 import ru.itis.bookmatch.domain.LoginUseCase
-import ru.itis.bookmatch.domain.SyncUseCase
+import ru.itis.bookmatch.domain.likedUseCase.SyncLikedUseCase
 import javax.inject.Inject
 
 class LoginScreenViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
-    private val syncUseCase: SyncUseCase
+    private val syncUseCase: SyncLikedUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<LoginScreenState>(LoginScreenState.Content(

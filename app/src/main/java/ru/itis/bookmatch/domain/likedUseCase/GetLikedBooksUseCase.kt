@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetLikedBooksUseCase @Inject constructor(
     private val repository: LikedBooksRepository
 ) {
-    operator fun invoke(userId: String, ): Flow<List<Book>> {
+    operator fun invoke(userId: String): Flow<List<Book>> {
         return repository.getLikedBooksFlow(userId)
     }
 }

@@ -20,11 +20,11 @@ class LikedBooksRepositoryImpl @Inject constructor(
     private val prefs = context.getSharedPreferences("syncTime", Context.MODE_PRIVATE)
 
     private fun getLastSyncTime(userId: String): Long {
-        return prefs.getLong("last_sync_time_${userId}", 0L)
+        return prefs.getLong("liked_last_sync_time_${userId}", 0L)
     }
 
     private fun saveLastSyncTime(userId: String, time: Long) {
-        prefs.edit().putLong("last_sync_time_${userId}", time).apply()
+        prefs.edit().putLong("liked_last_sync_time_${userId}", time).apply()
     }
 
     override fun getLikedBooksFlow(userId: String): Flow<List<Book>> {
@@ -33,6 +33,13 @@ class LikedBooksRepositoryImpl @Inject constructor(
                 it.toBookModel()
             }
         }
+    }
+
+    override suspend fun getLikedBook(
+        userId: String,
+        bookId: String
+    ): Book {
+        return (dao.getById(userId = userId, bookId = bookId))?.toBookModel() ?: throw Exception("Book not found")
     }
 
     override suspend fun addToLiked(userId: String, book: Book) {

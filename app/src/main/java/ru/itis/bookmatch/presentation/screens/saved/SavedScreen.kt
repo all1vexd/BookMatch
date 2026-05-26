@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MenuBook
@@ -128,6 +130,9 @@ fun SavedScreen(
                                 book = book,
                                 onRemove = {
                                     viewModel.processCommand(SavedScreenCommand.RemoveBook(book.id))
+                                },
+                                onMarkAsRead = {
+                                    viewModel.processCommand(SavedScreenCommand.MarkAsRead(it.id))
                                 }
                             )
                         }
@@ -206,7 +211,8 @@ fun SavedTopBar() {
 @Composable
 fun SavedBookCard(
     book: Book,
-    onRemove: (Book) -> Unit
+    onRemove: (Book) -> Unit,
+    onMarkAsRead: (Book) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -221,15 +227,15 @@ fun SavedBookCard(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(12.dp)
         ) {
             val imageUrl = toHighQualityUrl(book.thumbnailUrl)
             AsyncImage(
                 model = imageUrl,
                 contentDescription = "Cover of ${book.title}",
                 modifier = Modifier
-                    .size(90.dp)
+                    .fillMaxHeight()
+                    .size(100.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             )
@@ -262,54 +268,53 @@ fun SavedBookCard(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    if (book.categories.isNotEmpty()) {
-                        Text(
-                            text = book.categories.first(),
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    if (book.publishedDate.isNotEmpty()) {
-                        Text(
-                            text = book.publishedDate.take(4),
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                if (book.categories.isNotEmpty()) {
+                    Text(
+                        text = book.categories.first(),
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
 
-                if (book.averageRating > 0) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "★",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = String.format("%.1f", book.averageRating),
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(start = 4.dp)
-                        )
-                    }
+                Spacer(modifier = Modifier.height(4.dp))
+
+                if (book.publishedDate.isNotEmpty()) {
+                    Text(
+                        text = book.publishedDate.take(4),
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
+
             }
 
-            IconButton(
-                onClick = { onRemove(book) },
-                modifier = Modifier.size(40.dp)
+            Column(
+                modifier = Modifier.fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Remove from saved",
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-                )
+                IconButton(
+                    onClick = { onRemove(book) },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Remove from saved",
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                    )
+                }
+                IconButton(
+                    onClick = { onMarkAsRead(book) },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AutoStories,
+                        contentDescription = "Mark as read",
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                    )
+                }
             }
+
         }
     }
 }

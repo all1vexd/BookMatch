@@ -6,6 +6,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
 import dagger.Provides
 import ru.itis.bookmatch.data.dao.LikedBookDao
+import ru.itis.bookmatch.data.dao.ReadBookDao
 import ru.itis.bookmatch.data.network.GoogleBooksApi
 import ru.itis.bookmatch.data.network.RetrofitClient
 import ru.itis.bookmatch.data.repository.AuthRepository
@@ -14,6 +15,8 @@ import ru.itis.bookmatch.data.repository.BookRepositoryImpl
 import ru.itis.bookmatch.domain.BookRepository
 import ru.itis.bookmatch.data.repository.LikedBooksRepository
 import ru.itis.bookmatch.data.repository.LikedBooksRepositoryImpl
+import ru.itis.bookmatch.data.repository.ReadBookRepository
+import ru.itis.bookmatch.data.repository.ReadBookRepositoryImpl
 import javax.inject.Singleton
 
 @Module
@@ -45,5 +48,15 @@ class RepositoryModule {
     @Singleton
     fun provideBookRepository(api: GoogleBooksApi): BookRepository {
         return BookRepositoryImpl(api)
+    }
+
+    @Provides
+    @Singleton
+    fun provideReadBookRepository(
+        context: Context,
+        firestore: FirebaseFirestore,
+        dao: ReadBookDao
+    ): ReadBookRepository {
+        return ReadBookRepositoryImpl(context, firestore, dao)
     }
 }
