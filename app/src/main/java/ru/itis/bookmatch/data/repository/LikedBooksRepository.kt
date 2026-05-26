@@ -7,6 +7,8 @@ interface LikedBooksRepository {
 
     fun getLikedBooksFlow(userId: String): Flow<List<Book>>
 
+    suspend fun getLikedBook(userId: String, bookId: String): Book
+
     suspend fun addToLiked(userId: String, book: Book)
 
     suspend fun isLiked(userId: String, bookId: String): Boolean

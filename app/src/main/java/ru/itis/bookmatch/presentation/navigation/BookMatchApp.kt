@@ -91,7 +91,9 @@ fun BookMatchApp() {
                 )
             }
             composable(Screen.Library.route) {
-                LibraryScreen()
+                LibraryScreen(
+                    userId = currentUserId
+                )
             }
             composable(Screen.Profile.route) {
                 ProfileScreen()

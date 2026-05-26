@@ -11,15 +11,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import ru.itis.bookmatch.domain.Book
+import ru.itis.bookmatch.domain.ReadBook
+import ru.itis.bookmatch.domain.likedUseCase.GetLikedBookUseCase
 import ru.itis.bookmatch.domain.likedUseCase.GetLikedBooksUseCase
 import ru.itis.bookmatch.domain.likedUseCase.RemoveFromLikedBooksUseCase
+import ru.itis.bookmatch.domain.readUseCase.AddToReadUseCase
 import ru.itis.bookmatch.presentation.screens.mainScreen.MainScreenState
 import javax.inject.Inject
 
 class SavedScreenViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: String,
     private val removeFromLikedBooksUseCase: RemoveFromLikedBooksUseCase,
-    private val getLikedBooksUseCase: GetLikedBooksUseCase
+    private val getLikedBooksUseCase: GetLikedBooksUseCase,
+    private val getLikedBookUseCase: GetLikedBookUseCase,
+    private val addToReadUseCase: AddToReadUseCase
 ): ViewModel() {
 
     @AssistedFactory
@@ -54,11 +59,19 @@ class SavedScreenViewModel @AssistedInject constructor(
 
     fun processCommand(command: SavedScreenCommand) {
         when (command) {
-            SavedScreenCommand.BookClick -> {
-                TODO("Открыть экран подробной информации")
-            }
             is SavedScreenCommand.RemoveBook -> {
                 viewModelScope.launch {
+                    removeFromLikedBooksUseCase(userId, command.bookId)
+                }
+            }
+            is SavedScreenCommand.BookClick -> {
+
+            }
+            is SavedScreenCommand.MarkAsRead -> {
+                viewModelScope.launch {
+                    val book = getLikedBookUseCase(userId, command.bookId)
+                    val readBookModel = ReadBook(book)
+                    addToReadUseCase(userId, readBookModel)
                     removeFromLikedBooksUseCase(userId, command.bookId)
                 }
             }
@@ -71,7 +84,9 @@ sealed interface SavedScreenCommand {
 
     data class RemoveBook(val bookId: String): SavedScreenCommand
 
-    data object BookClick: SavedScreenCommand
+    data class BookClick(val bookId: String): SavedScreenCommand
+
+    data class MarkAsRead(val bookId: String): SavedScreenCommand
 }
 
 sealed interface SavedScreenState {

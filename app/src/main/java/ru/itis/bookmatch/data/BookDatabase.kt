@@ -5,17 +5,20 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import ru.itis.bookmatch.data.dao.LikedBookDao
+import ru.itis.bookmatch.data.dao.ReadBookDao
 import ru.itis.bookmatch.data.entity.LikedBookEntity
+import ru.itis.bookmatch.data.entity.ReadBookEntity
 import ru.itis.bookmatch.domain.Book
 
 @Database(
-    entities = [LikedBookEntity::class],
-    version = 2,
+    entities = [LikedBookEntity::class, ReadBookEntity::class],
+    version = 3,
     exportSchema = false
 )
 abstract class BookDatabase: RoomDatabase() {
 
     abstract fun likedBookDao(): LikedBookDao
+    abstract fun readBookDao(): ReadBookDao
 
     companion object {
 
