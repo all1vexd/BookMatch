@@ -9,8 +9,9 @@ interface GoogleBooksApi {
 
     @GET("volumes")
     suspend fun getBookForSwipe(
-        @Query("q") query: String = "subject:fiction",
+        @Query("q") query: String,
         @Query("maxResults") maxResults: Int = 20,
-        @Query("key") apiKey: String = BuildConfig.GOOGLE_BOOKS_API_KEY
+        @Query("key") apiKey: String = BuildConfig.GOOGLE_BOOKS_API_KEY,
+        @Query("startIndex") startIndex: Int = 0
     ): GoogleBooksResponse
 }

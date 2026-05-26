@@ -8,7 +8,7 @@ data class GoogleBooksResponse (
     @SerializedName("totalItems")
     val totalItems: Long,
     @SerializedName("items")
-    val items: List<BookItem>
+    val items: List<BookItem>?
 )
 
 data class BookItem(
