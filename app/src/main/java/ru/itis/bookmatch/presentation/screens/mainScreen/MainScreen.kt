@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +57,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.imageLoader
+import coil.request.ImageRequest
 import ru.itis.bookmatch.BookMatchApplication
 import ru.itis.bookmatch.data.toHighQualityUrl
 import ru.itis.bookmatch.domain.Book
@@ -139,6 +142,18 @@ fun MainScreen(
                 is MainScreenState.Content -> {
                     val contentState = state as MainScreenState.Content
                     val currentBook = contentState.bookList.getOrNull(contentState.currentIndex)
+
+                    LaunchedEffect(contentState.currentIndex) {
+                        contentState.bookList
+                            .drop(contentState.currentIndex + 1)
+                            .take(3)
+                            .forEach { book ->
+                                val request = ImageRequest.Builder(context)
+                                    .data(toHighQualityUrl(book.thumbnailUrl))
+                                    .build()
+                                context.imageLoader.enqueue(request)
+                            }
+                    }
 
                     if (currentBook != null) {
                         CardStack(
@@ -312,6 +327,7 @@ fun CardStack(
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
+                android.util.Log.d("BookImage", "url: $highQualityUrl")
                 if (highQualityUrl.isNotEmpty()) {
                     AsyncImage(
                         model = highQualityUrl,

@@ -14,16 +14,15 @@ fun BookItem.toBook(): Book {
         publishedDate = this.volumeInfo.publishedDate ?: "",
         pageCount = this.volumeInfo.pageCount ?: 0,
         averageRating = this.volumeInfo.averageRating ?: 0.0,
-        thumbnailUrl = this.volumeInfo.imageLinks?.thumbnail ?: "",
-        smallThumbnailUrl = this.volumeInfo.imageLinks?.smallThumbnail ?: ""
+        thumbnailUrl = toHighQualityUrl(this.volumeInfo.imageLinks?.thumbnail ?: ""),
+        smallThumbnailUrl = toHighQualityUrl(this.volumeInfo.imageLinks?.smallThumbnail ?: "")
     )
 }
 
 fun toHighQualityUrl(oldUrl: String): String {
     return oldUrl
         .takeIf { it.isNotEmpty() }
-        ?.replace("http://", "https://")
-        ?.replace("zoom=1", "zoom=3") ?: ""
+        ?.replace("http://", "https://") ?: ""
 }
 
 fun LikedBookEntity.toBookModel(): Book {

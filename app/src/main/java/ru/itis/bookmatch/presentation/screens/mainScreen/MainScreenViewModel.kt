@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -18,6 +20,11 @@ class MainScreenViewModel @AssistedInject constructor(
     private val getBooksForSwipeUseCase: GetBooksForSwipeUseCase,
     private val addToLikedUseCase: AddToLikedUseCase
 ): ViewModel() {
+
+    private var prefetchJob: Job? = null
+    private var prefetchBooks: List<Book> = emptyList()
+    private val seenBookIds = mutableSetOf<String>()
+    private var batchIndex = 0
 
     @AssistedFactory
     interface Factory {
@@ -34,18 +41,38 @@ class MainScreenViewModel @AssistedInject constructor(
     }
 
     fun loadData() {
+        prefetchJob?.cancel()
+        prefetchJob = null
+        prefetchBooks = emptyList()
         viewModelScope.launch {
             _state.value = MainScreenState.Loading
             try {
-                val books = getBooksForSwipeUseCase()
-                _state.value = MainScreenState.Content(
-                    bookList = books,
-                    currentIndex = 0
-                )
+                fetchAndApplyBooks()
             } catch (e: Exception) {
-                _state.value = MainScreenState.Error
+                var success = false
+                for (i in 1..3) {
+                    try {
+                        fetchAndApplyBooks()
+                        success = true
+                        break
+                    } catch (e: Exception) {
+                        delay(1000L)
+                    }
+                }
+                if (!success) {
+                    _state.value = MainScreenState.Error
+                }
             }
         }
+    }
+
+    private suspend fun fetchAndApplyBooks() {
+        val books = getBooksForSwipeUseCase(userId, batchIndex)
+        val freshBooks = books.filter { it.id !in seenBookIds }
+        seenBookIds.addAll(freshBooks.map { it.id })
+        batchIndex += 5
+        if (freshBooks.isEmpty()) throw Exception("No book loaded")
+        _state.value = MainScreenState.Content(bookList = freshBooks, currentIndex = 0)
     }
 
     fun processCommand(command: MainScreenCommand) {
@@ -72,24 +99,40 @@ class MainScreenViewModel @AssistedInject constructor(
         }
     }
 
-    fun goToNextBook() {
+    private fun goToNextBook() {
+        val currentState = _state.value as? MainScreenState.Content ?: return
+        val remaining = currentState.bookList.size - currentState.currentIndex
 
-        val currentState = _state.value
-
-        if (currentState is MainScreenState.Content) {
-            val currentIndexFromState = currentState.currentIndex
-            val totalBooks = currentState.bookList.size
-
-            if (currentIndexFromState + 1 < totalBooks) {
-                _state.update { state ->
-                    if (state is MainScreenState.Content) {
-                        state.copy(
-                            currentIndex = currentIndexFromState + 1
-                        )
-                    } else {
-                        state
+        if (remaining == 5 && prefetchJob == null) {
+            prefetchJob = viewModelScope.launch {
+                runCatching { getBooksForSwipeUseCase(userId, batchIndex) }
+                    .onSuccess {
+                        val freshBooks = it.filter { book ->
+                            book.id !in seenBookIds
+                        }
+                        seenBookIds.addAll(freshBooks.map { it.id })
+                        prefetchBooks = freshBooks
+                        batchIndex += 5
                     }
+                prefetchJob = null
+            }
+        }
+
+        if (currentState.currentIndex + 1 < currentState.bookList.size) {
+            _state.update { state ->
+                if (state is MainScreenState.Content) {
+                    state.copy(currentIndex = currentState.currentIndex + 1)
+                } else {
+                    state
                 }
+            }
+        } else {
+            if (prefetchBooks.isNotEmpty()) {
+                _state.value = MainScreenState.Content(bookList = prefetchBooks)
+                prefetchBooks = emptyList()
+                prefetchJob = null
+            } else {
+                loadData()
             }
         }
     }
@@ -111,7 +154,6 @@ sealed interface MainScreenState {
 
     data class Content(
         val bookList: List<Book> = listOf(),
-        val likedBooks: List<Book> = listOf(),
         val currentIndex: Int = 0
     ) : MainScreenState
 }
