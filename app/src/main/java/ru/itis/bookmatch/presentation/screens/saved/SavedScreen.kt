@@ -55,12 +55,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import ru.itis.bookmatch.BookMatchApplication
 import ru.itis.bookmatch.data.toHighQualityUrl
+import ru.itis.bookmatch.data.toLikedEntity
 import ru.itis.bookmatch.domain.Book
 
 @Composable
 fun SavedScreen(
     userId: String,
-    onBookClick: (String) -> Unit = {},
+    onBookClick: (Book) -> Unit,
 ) {
     val context: Context = LocalContext.current
     val appComponent = (context.applicationContext as BookMatchApplication).appComponent
@@ -133,6 +134,9 @@ fun SavedScreen(
                                 },
                                 onMarkAsRead = {
                                     viewModel.processCommand(SavedScreenCommand.MarkAsRead(it.id))
+                                },
+                                onBookClick = {
+                                    onBookClick(book)
                                 }
                             )
                         }
@@ -212,7 +216,8 @@ fun SavedTopBar() {
 fun SavedBookCard(
     book: Book,
     onRemove: (Book) -> Unit,
-    onMarkAsRead: (Book) -> Unit
+    onMarkAsRead: (Book) -> Unit,
+    onBookClick: (Book) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -222,7 +227,10 @@ fun SavedBookCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        onClick = {
+            onBookClick(book)
+        }
     ) {
         Row(
             modifier = Modifier

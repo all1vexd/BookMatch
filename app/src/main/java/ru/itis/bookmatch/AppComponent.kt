@@ -2,6 +2,7 @@ package ru.itis.bookmatch
 
 import dagger.Component
 import ru.itis.bookmatch.presentation.MainActivity
+import ru.itis.bookmatch.presentation.screens.bookDetail.BookDetailScreenViewModel
 import ru.itis.bookmatch.presentation.screens.library.LibraryScreenViewModel
 import ru.itis.bookmatch.presentation.screens.login.LoginScreenViewModel
 import ru.itis.bookmatch.presentation.screens.mainScreen.MainScreenViewModel
@@ -36,4 +37,6 @@ interface AppComponent {
     fun libraryScreenViewModelFactory(): LibraryScreenViewModel.Factory
 
     fun profileScreenViewModelFactory(): ProfileScreenViewModel.Factory
+
+    fun bookDetailScreenViewModelFactory(): BookDetailScreenViewModel.Factory
 }

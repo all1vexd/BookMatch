@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoStories
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material3.AlertDialog
@@ -58,12 +59,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import ru.itis.bookmatch.BookMatchApplication
 import ru.itis.bookmatch.data.toHighQualityUrl
+import ru.itis.bookmatch.domain.Book
 import ru.itis.bookmatch.domain.ReadBook
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
     userId: String,
+    onBookClick: (Book) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -168,7 +171,8 @@ fun LibraryScreen(
                                     viewModel.processCommand(
                                         LibraryScreenCommand.OpenRatingDialog(readBook.book.id)
                                     )
-                                }
+                                },
+                                onDetailClick = { onBookClick(readBook.book) }
                             )
                         }
                     }
@@ -218,7 +222,8 @@ fun LibraryTopBar() {
 @Composable
 fun ReadBookCard(
     readBook: ReadBook,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDetailClick: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
@@ -291,6 +296,23 @@ fun ReadBookCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier.fillMaxHeight(),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                IconButton(
+                    onClick = onDetailClick,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "Book details",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

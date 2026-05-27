@@ -1,5 +1,6 @@
 package ru.itis.bookmatch.presentation.screens
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoStories
@@ -7,6 +8,8 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.google.gson.Gson
+import ru.itis.bookmatch.domain.Book
 
 sealed class Screen(
     val route: String,
@@ -67,4 +70,19 @@ sealed class Screen(
         route = "login",
         title = "Login"
     )
+
+    data object BookDetail : Screen(
+        route = "book_detail/{user_id}/{book_json}",
+        title = "BookDetail"
+    ) {
+        fun createRoute(userId: String, bookJson: String): String {
+            return "book_detail/${userId}/${Uri.encode(bookJson)}"
+        }
+
+        fun getBook(arguments: Bundle?): Book {
+            val correctJson = Uri.decode(arguments?.getString("book_json"))
+            return Gson().fromJson(correctJson, Book::class.java)
+        }
+    }
+
 }

@@ -12,8 +12,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.gson.Gson
 import ru.itis.bookmatch.presentation.screens.BottomBar
 import ru.itis.bookmatch.presentation.screens.Screen
+import ru.itis.bookmatch.presentation.screens.bookDetail.BookDetailScreen
 import ru.itis.bookmatch.presentation.screens.library.LibraryScreen
 import ru.itis.bookmatch.presentation.screens.login.LoginScreen
 import ru.itis.bookmatch.presentation.screens.mainScreen.MainScreen
@@ -79,25 +81,43 @@ fun BookMatchApp() {
             }
             composable(Screen.Discover.route) {
                 MainScreen(
-                    userId = currentUserId
+                    userId = currentUserId,
+                    onBookClick = {
+                        navController.navigate(Screen.BookDetail.createRoute(currentUserId, Gson().toJson(it)))
+                    }
                 )
             }
             composable(Screen.Saved.route) {
                 SavedScreen(
                     userId = currentUserId,
-                    onBookClick = { bookId ->
-                        TODO("Сделать")
+                    onBookClick = { book ->
+                        navController.navigate(Screen.BookDetail.createRoute(currentUserId, Gson().toJson(book)))
                     }
                 )
             }
             composable(Screen.Library.route) {
                 LibraryScreen(
-                    userId = currentUserId
+                    userId = currentUserId,
+                    onBookClick = { book ->
+                        navController.navigate(Screen.BookDetail.createRoute(currentUserId, Gson().toJson(book)))
+                    }
                 )
             }
             composable(Screen.Profile.route) {
                 ProfileScreen(
-                    userId = currentUserId
+                    userId = currentUserId,
+                    onBookClick = {
+                        navController.navigate(Screen.BookDetail.createRoute(currentUserId, Gson().toJson(it)))
+                    }
+                )
+            }
+            composable(Screen.BookDetail.route) {backStackEntry ->
+                BookDetailScreen(
+                    userId = currentUserId,
+                    book = Screen.BookDetail.getBook(backStackEntry.arguments),
+                    onBack = {
+                        navController.popBackStack()
+                    }
                 )
             }
         }
