@@ -16,4 +16,6 @@ interface LikedBooksRepository {
     suspend fun deleteFromLiked(userId: String, bookId: String)
 
     suspend fun syncWithFirestore(userId: String)
+
+    suspend fun getBooksCount(userId: String): Int
 }

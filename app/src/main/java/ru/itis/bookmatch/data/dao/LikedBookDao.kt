@@ -28,4 +28,7 @@ interface LikedBookDao {
 
     @Query("SELECT * FROM liked_books WHERE userId = :userId AND synced = 0")
     suspend fun getUnsynced(userId: String): List<LikedBookEntity>
+
+    @Query("SELECT count(*) FROM liked_books WHERE userId = :userId")
+    suspend fun getBooksCount(userId: String): Int
 }

@@ -27,7 +27,7 @@ fun BookMatchApp() {
 
     var currentUserId by remember { mutableStateOf("") }
     var currentRoute by remember {
-        mutableStateOf(Screen.Discover.route)
+        mutableStateOf(Screen.Login.route)
     }
 
     navController.addOnDestinationChangedListener { _, destination, _ ->
@@ -96,7 +96,9 @@ fun BookMatchApp() {
                 )
             }
             composable(Screen.Profile.route) {
-                ProfileScreen()
+                ProfileScreen(
+                    userId = currentUserId
+                )
             }
         }
 

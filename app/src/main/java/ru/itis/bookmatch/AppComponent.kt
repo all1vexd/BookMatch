@@ -5,6 +5,7 @@ import ru.itis.bookmatch.presentation.MainActivity
 import ru.itis.bookmatch.presentation.screens.library.LibraryScreenViewModel
 import ru.itis.bookmatch.presentation.screens.login.LoginScreenViewModel
 import ru.itis.bookmatch.presentation.screens.mainScreen.MainScreenViewModel
+import ru.itis.bookmatch.presentation.screens.profile.ProfileScreenViewModel
 import ru.itis.bookmatch.presentation.screens.registration.RegistrationScreenViewModel
 import ru.itis.bookmatch.presentation.screens.saved.SavedScreenViewModel
 import javax.inject.Singleton
@@ -33,4 +34,6 @@ interface AppComponent {
     fun registrationScreenViewModel(): RegistrationScreenViewModel
 
     fun libraryScreenViewModelFactory(): LibraryScreenViewModel.Factory
+
+    fun profileScreenViewModelFactory(): ProfileScreenViewModel.Factory
 }
