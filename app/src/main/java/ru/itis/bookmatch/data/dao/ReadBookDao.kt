@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 import ru.itis.bookmatch.data.entity.ReadBookEntity
+import ru.itis.bookmatch.domain.ReadBook
 
 @Dao
 interface ReadBookDao {
@@ -33,4 +34,10 @@ interface ReadBookDao {
 
     @Query("UPDATE read_book SET readerRating = :rating WHERE userId = :userId AND bookId = :bookId")
     suspend fun updateRating(userId: String, bookId: String, rating: Double)
+
+    @Query("SELECT count(*) FROM read_book WHERE userId = :userId")
+    suspend fun getBooksCount(userId: String): Int
+
+    @Query("SELECT * FROM read_book WHERE userId = :userId ORDER BY timestamp DESC LIMIT 3")
+    fun getLastReadBooks(userId: String): Flow<List<ReadBookEntity>>
 }

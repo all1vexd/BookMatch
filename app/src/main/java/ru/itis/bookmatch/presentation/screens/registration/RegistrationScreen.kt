@@ -100,6 +100,16 @@ fun RegistrationScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     OutlinedTextField(
+                        value = contentState.nickname,
+                        onValueChange = { input ->
+                            viewModel.processCommand(NicknameInput(input))
+                        },
+                        label = { Text("Имя Пользователя") }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedTextField(
                         value = contentState.password,
                         onValueChange = { input ->
                             viewModel.processCommand(PasswordInput(input))

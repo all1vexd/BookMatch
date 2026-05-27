@@ -7,7 +7,7 @@ class RegisterUseCase @Inject constructor(
     private val repository: AuthRepository
 ) {
 
-    suspend operator fun invoke(email: String, password: String): AuthUser {
-        return repository.register(email, password)
+    suspend operator fun invoke(email: String, password: String, nickname: String): AuthUser {
+        return repository.register(email, password, nickname)
     }
 }

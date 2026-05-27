@@ -15,6 +15,8 @@ import ru.itis.bookmatch.data.repository.BookRepositoryImpl
 import ru.itis.bookmatch.domain.BookRepository
 import ru.itis.bookmatch.data.repository.LikedBooksRepository
 import ru.itis.bookmatch.data.repository.LikedBooksRepositoryImpl
+import ru.itis.bookmatch.data.repository.ProfileRepository
+import ru.itis.bookmatch.data.repository.ProfileRepositoryImpl
 import ru.itis.bookmatch.data.repository.ReadBookRepository
 import ru.itis.bookmatch.data.repository.ReadBookRepositoryImpl
 import javax.inject.Singleton
@@ -24,8 +26,8 @@ class RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideAuthRepository(auth: FirebaseAuth): AuthRepository {
-        return AuthRepositoryImpl(auth)
+    fun provideAuthRepository(auth: FirebaseAuth, firestore: FirebaseFirestore): AuthRepository {
+        return AuthRepositoryImpl(auth, firestore)
     }
 
     @Provides
@@ -58,5 +60,11 @@ class RepositoryModule {
         dao: ReadBookDao
     ): ReadBookRepository {
         return ReadBookRepositoryImpl(context, firestore, dao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideProfileRepository(firestore: FirebaseFirestore): ProfileRepository {
+        return ProfileRepositoryImpl(firestore)
     }
 }

@@ -91,4 +91,16 @@ class ReadBookRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
         }
     }
+
+    override suspend fun getBooksCount(userId: String): Int {
+        return dao.getBooksCount(userId)
+    }
+
+    override suspend fun getLastReadBook(userId: String): Flow<List<ReadBook>> {
+        return dao.getLastReadBooks(userId = userId).map { bookList ->
+            bookList.map {
+                it.toBookModel()
+            }
+        }
+    }
 }

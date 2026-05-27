@@ -109,4 +109,8 @@ class LikedBooksRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
         }
     }
+
+    override suspend fun getBooksCount(userId: String): Int {
+        return dao.getBooksCount(userId)
+    }
 }
