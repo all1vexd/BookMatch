@@ -4,6 +4,7 @@ package ru.itis.bookmatch.presentation.screens.mainScreen
 
 import android.R.attr.translationX
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -71,7 +72,8 @@ import ru.itis.bookmatch.presentation.screens.Screen
 @Composable
 fun MainScreen(
     userId: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onBookClick: (Book) -> Unit
 ) {
     val context = LocalContext.current
     val appComponent = (context.applicationContext as BookMatchApplication).appComponent
@@ -164,6 +166,9 @@ fun MainScreen(
                             },
                             onSwipeRight = {
                                 viewModel.processCommand(MainScreenCommand.RightSwipe)
+                            },
+                            onBookClick = {
+                                onBookClick(it)
                             }
                         )
                     } else {
@@ -262,8 +267,9 @@ fun MainTopBar(
 fun CardStack(
     modifier: Modifier = Modifier,
     book: Book?,
-    onSwipeRight: () -> Unit = {},
-    onSwipeLeft: () -> Unit = {}
+    onSwipeRight: () -> Unit,
+    onSwipeLeft: () -> Unit,
+    onBookClick: (Book) -> Unit
 ) {
 
     if (book == null) {
@@ -314,6 +320,12 @@ fun CardStack(
                     }
                 )
             }
+            .clickable(
+                enabled = true,
+                onClick = {
+                    onBookClick(book)
+                }
+            )
     ) {
         Column(
             modifier = Modifier

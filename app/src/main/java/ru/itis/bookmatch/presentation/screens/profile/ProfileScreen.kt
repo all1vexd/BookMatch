@@ -1,6 +1,7 @@
 package ru.itis.bookmatch.presentation.screens.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -65,7 +66,8 @@ import ru.itis.bookmatch.domain.ReadBook
 @Composable
 fun ProfileScreen(
     userId: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onBookClick: (ReadBook) -> Unit
 ) {
     val context = LocalContext.current
     val appComponent = (context.applicationContext as BookMatchApplication).appComponent
@@ -225,7 +227,12 @@ fun ProfileScreen(
                             contentPadding = PaddingValues(horizontal = 0.dp)
                         ) {
                             items(contentState.recentReadBooks) { readBook ->
-                                RecentBookCard(readBook = readBook)
+                                RecentBookCard(
+                                    readBook = readBook,
+                                    onBookClick = {
+                                        onBookClick(it)
+                                    }
+                                )
                             }
                         }
                     }
@@ -272,12 +279,18 @@ fun StatCard(
 }
 
 @Composable
-fun RecentBookCard(readBook: ReadBook) {
+fun RecentBookCard(
+    readBook: ReadBook,
+    onBookClick: (ReadBook) -> Unit
+) {
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier.width(110.dp).height(200.dp)
+            .clickable(
+                onClick = {onBookClick(readBook)}
+            )
     ) {
         Column {
             AsyncImage(

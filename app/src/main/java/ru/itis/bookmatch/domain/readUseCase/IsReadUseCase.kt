@@ -7,7 +7,7 @@ import javax.inject.Inject
 class IsReadUseCase @Inject constructor(
     private val readBooksRepository: ReadBookRepository
 ) {
-    suspend operator fun invoke(userId: String, bookId: String) {
-        readBooksRepository.isRead(userId = userId, bookId = bookId)
+    suspend operator fun invoke(userId: String, bookId: String): Boolean {
+        return readBooksRepository.isRead(userId = userId, bookId = bookId)
     }
 }

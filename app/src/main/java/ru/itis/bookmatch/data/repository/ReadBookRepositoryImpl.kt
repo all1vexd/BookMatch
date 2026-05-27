@@ -103,4 +103,11 @@ class ReadBookRepositoryImpl @Inject constructor(
             }
         }
     }
+
+    override suspend fun getById(
+        userId: String,
+        bookId: String
+    ): ReadBook? {
+        return dao.getById(userId,bookId)?.toBookModel()
+    }
 }
