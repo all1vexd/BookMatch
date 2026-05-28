@@ -3,7 +3,8 @@ package ru.itis.bookmatch.domain
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
-import ru.itis.bookmatch.data.repository.LikedBooksRepository
+import ru.itis.bookmatch.domain.repository.LikedBooksRepository
+import ru.itis.bookmatch.domain.repository.BookRepository
 import javax.inject.Inject
 
 class GetBooksForSwipeUseCase @Inject constructor(

@@ -1,7 +1,7 @@
 package ru.itis.bookmatch.domain.likedUseCase
 
 import kotlinx.coroutines.flow.Flow
-import ru.itis.bookmatch.data.repository.LikedBooksRepository
+import ru.itis.bookmatch.domain.repository.LikedBooksRepository
 import ru.itis.bookmatch.domain.Book
 import javax.inject.Inject
 

@@ -11,29 +11,29 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.itis.bookmatch.domain.Book
 import ru.itis.bookmatch.domain.ReadBook
+import ru.itis.bookmatch.domain.cachedUseCase.GetCachedBookUseCase
 import ru.itis.bookmatch.domain.likedUseCase.AddToLikedUseCase
-import ru.itis.bookmatch.domain.likedUseCase.GetLikedBooksUseCase
-import ru.itis.bookmatch.domain.likedUseCase.IsLikedUseCase
+import ru.itis.bookmatch.domain.likedUseCase.GetLikedBookUseCase
 import ru.itis.bookmatch.domain.likedUseCase.RemoveFromLikedBooksUseCase
 import ru.itis.bookmatch.domain.readUseCase.AddToReadUseCase
-import ru.itis.bookmatch.domain.readUseCase.GetReadBooksUseCase
-import ru.itis.bookmatch.domain.readUseCase.IsReadUseCase
+import ru.itis.bookmatch.domain.readUseCase.GetReadBookUseCase
 
 class BookDetailScreenViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: String,
-    @Assisted("book") private val book: Book,
-    private val isLikedUseCase: IsLikedUseCase,
-    private val isReadUseCase: IsReadUseCase,
+    @Assisted("bookId") private val bookId: String,
     private val addToLikedUseCase: AddToLikedUseCase,
     private val addToReadUseCase: AddToReadUseCase,
-    private val removeFromLikedBooksUseCase: RemoveFromLikedBooksUseCase
+    private val removeFromLikedBooksUseCase: RemoveFromLikedBooksUseCase,
+    private val getLikedBookUseCase: GetLikedBookUseCase,
+    private val getReadBookUseCase: GetReadBookUseCase,
+    private val getCachedBookUseCase: GetCachedBookUseCase
 ): ViewModel() {
 
     @AssistedFactory
     interface Factory {
         fun create(
             @Assisted("userId") userId: String,
-            @Assisted("book") book: Book
+            @Assisted("bookId") bookId: String
         ) : BookDetailScreenViewModel
     }
 
@@ -48,13 +48,21 @@ class BookDetailScreenViewModel @AssistedInject constructor(
         viewModelScope.launch {
             _state.value = BookDetailScreenState.Loading
             try {
-                val isRead = isReadUseCase(userId = userId, bookId = book.id)
-                val isLiked = isLikedUseCase(userId = userId, bookId = book.id)
-                _state.value = BookDetailScreenState.Content(
-                    isLiked = isLiked,
-                    isRead = isRead,
-                    book = book
-                )
+                val likedBook = getLikedBookUseCase(userId = userId, bookId = bookId)
+                val readBook = getReadBookUseCase(userId = userId, bookId = bookId)
+                val cachedBook = getCachedBookUseCase(userId = userId, bookId = bookId)
+                val book = likedBook ?: readBook?.book ?: cachedBook
+                if (book == null) {
+                    _state.value = BookDetailScreenState.Error("Книга не найдена")
+                } else {
+                    _state.value = BookDetailScreenState.Content(
+                        isLiked = likedBook != null,
+                        isRead = readBook != null,
+                        book = book
+                    )
+                }
+
+
             } catch (e: Exception) {
                 _state.value = BookDetailScreenState.Error(errorMessage = e.message ?: "")
             }
@@ -66,13 +74,22 @@ class BookDetailScreenViewModel @AssistedInject constructor(
             BookDetailScreenCommand.MarkAsRead -> {
                 viewModelScope.launch {
                     try {
-                        addToReadUseCase(userId = userId, readBook = ReadBook(book = book))
-                        removeFromLikedBooksUseCase(userId = userId, bookId = book.id)
-                        _state.value = BookDetailScreenState.Content(
-                            isRead = true,
-                            isLiked = false,
-                            book = book
-                        )
+                        val book = getLikedBookUseCase(userId = userId, bookId = bookId)
+                        val cachedBook = getCachedBookUseCase(userId = userId, bookId = bookId)
+                        if (book != null) {
+                            addToReadUseCase(userId = userId, readBook = ReadBook(book = book))
+                            removeFromLikedBooksUseCase(userId = userId, bookId = book.id)
+                            _state.update {
+                                (it as BookDetailScreenState.Content).copy(isRead = true, isLiked = false)
+                            }
+                        } else if (cachedBook != null) {
+                            addToReadUseCase(userId = userId, readBook = ReadBook(book = cachedBook))
+                            _state.update {
+                                (it as BookDetailScreenState.Content).copy(isRead = true)
+                            }
+                        } else {
+                            throw Exception("Book not found")
+                        }
                     } catch (e: Exception) {
                         _state.value = BookDetailScreenState.Error(errorMessage = e.message ?: "")
                     }
@@ -80,19 +97,21 @@ class BookDetailScreenViewModel @AssistedInject constructor(
 
             }
             BookDetailScreenCommand.ToggleLiked -> {
-                val currentState = _state.value as? BookDetailScreenState.Content ?: return
                 viewModelScope.launch {
-                    val isBookLiked = currentState.isLiked
-                    if (isBookLiked) {
-                        removeFromLikedBooksUseCase(userId, book.id)
+                    val likedBook = getLikedBookUseCase(userId = userId, bookId = bookId)
+                    val cachedBook = getCachedBookUseCase(userId = userId, bookId = bookId)
+                    if (likedBook != null) {
+                        removeFromLikedBooksUseCase(userId, likedBook.id)
                         _state.update {
-                            (it as BookDetailScreenState.Content).copy(isLiked = !isBookLiked)
+                            (it as BookDetailScreenState.Content).copy(isLiked = false)
+                        }
+                    } else if (cachedBook != null) {
+                        addToLikedUseCase(userId = userId, book = cachedBook)
+                        _state.update {
+                            (it as BookDetailScreenState.Content).copy(isLiked = true)
                         }
                     } else {
-                        addToLikedUseCase(userId, book)
-                        _state.update {
-                            (it as BookDetailScreenState.Content).copy(isLiked = !isBookLiked)
-                        }
+                        throw Exception("Book not found")
                     }
                 }
             }

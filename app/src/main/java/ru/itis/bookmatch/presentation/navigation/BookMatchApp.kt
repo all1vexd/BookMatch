@@ -82,45 +82,62 @@ fun BookMatchApp() {
             composable(Screen.Discover.route) {
                 MainScreen(
                     userId = currentUserId,
-                    onBookClick = {
-                        navController.navigate(Screen.BookDetail.createRoute(currentUserId, Gson().toJson(it)))
+                    onBookClick = { bookId ->
+                        navController.navigate(Screen.BookDetail.createRoute(
+                            userId = currentUserId,
+                            bookId = bookId
+                            )
+                        )
                     }
                 )
             }
             composable(Screen.Saved.route) {
                 SavedScreen(
                     userId = currentUserId,
-                    onBookClick = { book ->
-                        navController.navigate(Screen.BookDetail.createRoute(currentUserId, Gson().toJson(book)))
+                    onBookClick = { bookId ->
+                        navController.navigate(Screen.BookDetail.createRoute(
+                            userId = currentUserId,
+                            bookId = bookId
+                            )
+                        )
                     }
                 )
             }
             composable(Screen.Library.route) {
                 LibraryScreen(
                     userId = currentUserId,
-                    onBookClick = { book ->
-                        navController.navigate(Screen.BookDetail.createRoute(currentUserId, Gson().toJson(book)))
+                    onBookClick = { bookId ->
+                        navController.navigate(Screen.BookDetail.createRoute(
+                            userId = currentUserId,
+                            bookId = bookId
+                            )
+                        )
                     }
                 )
             }
             composable(Screen.Profile.route) {
                 ProfileScreen(
                     userId = currentUserId,
-                    onBookClick = {
-                        navController.navigate(Screen.BookDetail.createRoute(currentUserId, Gson().toJson(it)))
+                    onBookClick = { bookId ->
+                        navController.navigate(Screen.BookDetail.createRoute(
+                            userId = currentUserId,
+                            bookId = bookId
+                            )
+                        )
                     }
                 )
             }
             composable(Screen.BookDetail.route) {backStackEntry ->
                 BookDetailScreen(
                     userId = currentUserId,
-                    book = Screen.BookDetail.getBook(backStackEntry.arguments),
+                    bookId = Screen.BookDetail.getBookId(backStackEntry.arguments),
                     onBack = {
                         navController.popBackStack()
                     }
                 )
             }
         }
+
 
         if (shouldShowBottomBar) {
             BottomBar(

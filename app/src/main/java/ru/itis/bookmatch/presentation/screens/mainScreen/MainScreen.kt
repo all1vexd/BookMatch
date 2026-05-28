@@ -73,7 +73,7 @@ import ru.itis.bookmatch.presentation.screens.Screen
 fun MainScreen(
     userId: String,
     modifier: Modifier = Modifier,
-    onBookClick: (Book) -> Unit
+    onBookClick: (String) -> Unit
 ) {
     val context = LocalContext.current
     val appComponent = (context.applicationContext as BookMatchApplication).appComponent
@@ -167,8 +167,8 @@ fun MainScreen(
                             onSwipeRight = {
                                 viewModel.processCommand(MainScreenCommand.RightSwipe)
                             },
-                            onBookClick = {
-                                onBookClick(it)
+                            onBookClick = {bookId ->
+                                onBookClick(bookId)
                             }
                         )
                     } else {
@@ -269,7 +269,7 @@ fun CardStack(
     book: Book?,
     onSwipeRight: () -> Unit,
     onSwipeLeft: () -> Unit,
-    onBookClick: (Book) -> Unit
+    onBookClick: (String) -> Unit
 ) {
 
     if (book == null) {
@@ -323,7 +323,7 @@ fun CardStack(
             .clickable(
                 enabled = true,
                 onClick = {
-                    onBookClick(book)
+                    onBookClick(book.id)
                 }
             )
     ) {

@@ -1,6 +1,6 @@
 package ru.itis.bookmatch.domain.readUseCase
 
-import ru.itis.bookmatch.data.repository.ReadBookRepository
+import ru.itis.bookmatch.domain.repository.ReadBookRepository
 import javax.inject.Inject
 
 class UpdateFeedbackUseCase @Inject constructor(

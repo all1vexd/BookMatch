@@ -9,15 +9,15 @@ import ru.itis.bookmatch.data.dao.LikedBookDao
 import ru.itis.bookmatch.data.dao.ReadBookDao
 import ru.itis.bookmatch.data.network.GoogleBooksApi
 import ru.itis.bookmatch.data.network.RetrofitClient
-import ru.itis.bookmatch.data.repository.AuthRepository
+import ru.itis.bookmatch.domain.repository.AuthRepository
 import ru.itis.bookmatch.data.repository.AuthRepositoryImpl
 import ru.itis.bookmatch.data.repository.BookRepositoryImpl
-import ru.itis.bookmatch.domain.BookRepository
-import ru.itis.bookmatch.data.repository.LikedBooksRepository
+import ru.itis.bookmatch.domain.repository.BookRepository
+import ru.itis.bookmatch.domain.repository.LikedBooksRepository
 import ru.itis.bookmatch.data.repository.LikedBooksRepositoryImpl
-import ru.itis.bookmatch.data.repository.ProfileRepository
+import ru.itis.bookmatch.domain.repository.ProfileRepository
 import ru.itis.bookmatch.data.repository.ProfileRepositoryImpl
-import ru.itis.bookmatch.data.repository.ReadBookRepository
+import ru.itis.bookmatch.domain.repository.ReadBookRepository
 import ru.itis.bookmatch.data.repository.ReadBookRepositoryImpl
 import javax.inject.Singleton
 
