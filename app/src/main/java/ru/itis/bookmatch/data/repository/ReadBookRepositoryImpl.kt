@@ -10,6 +10,7 @@ import ru.itis.bookmatch.data.entity.ReadBookEntity
 import ru.itis.bookmatch.data.toBookModel
 import ru.itis.bookmatch.data.toReadEntity
 import ru.itis.bookmatch.domain.ReadBook
+import ru.itis.bookmatch.domain.repository.ReadBookRepository
 import javax.inject.Inject
 
 class ReadBookRepositoryImpl @Inject constructor(

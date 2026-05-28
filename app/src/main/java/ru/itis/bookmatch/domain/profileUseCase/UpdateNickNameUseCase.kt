@@ -1,6 +1,6 @@
 package ru.itis.bookmatch.domain.profileUseCase
 
-import ru.itis.bookmatch.data.repository.ProfileRepository
+import ru.itis.bookmatch.domain.repository.ProfileRepository
 import javax.inject.Inject
 
 class UpdateNickNameUseCase @Inject constructor(

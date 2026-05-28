@@ -67,7 +67,7 @@ import ru.itis.bookmatch.domain.ReadBook
 fun ProfileScreen(
     userId: String,
     modifier: Modifier = Modifier,
-    onBookClick: (ReadBook) -> Unit
+    onBookClick: (String) -> Unit
 ) {
     val context = LocalContext.current
     val appComponent = (context.applicationContext as BookMatchApplication).appComponent
@@ -229,8 +229,8 @@ fun ProfileScreen(
                             items(contentState.recentReadBooks) { readBook ->
                                 RecentBookCard(
                                     readBook = readBook,
-                                    onBookClick = {
-                                        onBookClick(it)
+                                    onBookClick = { bookId ->
+                                        onBookClick(bookId)
                                     }
                                 )
                             }
@@ -281,7 +281,7 @@ fun StatCard(
 @Composable
 fun RecentBookCard(
     readBook: ReadBook,
-    onBookClick: (ReadBook) -> Unit
+    onBookClick: (String) -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -289,7 +289,7 @@ fun RecentBookCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier.width(110.dp).height(200.dp)
             .clickable(
-                onClick = {onBookClick(readBook)}
+                onClick = {onBookClick(readBook.book.id)}
             )
     ) {
         Column {

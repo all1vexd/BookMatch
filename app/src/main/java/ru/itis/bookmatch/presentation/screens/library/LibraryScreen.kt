@@ -66,7 +66,7 @@ import ru.itis.bookmatch.domain.ReadBook
 @Composable
 fun LibraryScreen(
     userId: String,
-    onBookClick: (Book) -> Unit,
+    onBookClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -172,7 +172,9 @@ fun LibraryScreen(
                                         LibraryScreenCommand.OpenRatingDialog(readBook.book.id)
                                     )
                                 },
-                                onDetailClick = { onBookClick(readBook.book) }
+                                onDetailClick = { bookId ->
+                                    onBookClick(bookId)
+                                }
                             )
                         }
                     }
@@ -223,7 +225,7 @@ fun LibraryTopBar() {
 fun ReadBookCard(
     readBook: ReadBook,
     onClick: () -> Unit,
-    onDetailClick: () -> Unit = {}
+    onDetailClick: (String) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -306,7 +308,7 @@ fun ReadBookCard(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 IconButton(
-                    onClick = onDetailClick,
+                    onClick = { onDetailClick(readBook.book.id)},
                     modifier = Modifier.size(36.dp)
                 ) {
                     Icon(

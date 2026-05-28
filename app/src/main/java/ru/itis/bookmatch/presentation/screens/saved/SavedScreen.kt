@@ -61,7 +61,7 @@ import ru.itis.bookmatch.domain.Book
 @Composable
 fun SavedScreen(
     userId: String,
-    onBookClick: (Book) -> Unit,
+    onBookClick: (String) -> Unit,
 ) {
     val context: Context = LocalContext.current
     val appComponent = (context.applicationContext as BookMatchApplication).appComponent
@@ -135,8 +135,8 @@ fun SavedScreen(
                                 onMarkAsRead = {
                                     viewModel.processCommand(SavedScreenCommand.MarkAsRead(it.id))
                                 },
-                                onBookClick = {
-                                    onBookClick(book)
+                                onBookClick = { bookId ->
+                                    onBookClick(bookId)
                                 }
                             )
                         }
@@ -217,7 +217,7 @@ fun SavedBookCard(
     book: Book,
     onRemove: (Book) -> Unit,
     onMarkAsRead: (Book) -> Unit,
-    onBookClick: (Book) -> Unit
+    onBookClick: (String) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -229,7 +229,7 @@ fun SavedBookCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         onClick = {
-            onBookClick(book)
+            onBookClick(book.id)
         }
     ) {
         Row(

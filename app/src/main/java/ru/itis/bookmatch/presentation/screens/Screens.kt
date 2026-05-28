@@ -72,16 +72,15 @@ sealed class Screen(
     )
 
     data object BookDetail : Screen(
-        route = "book_detail/{user_id}/{book_json}",
+        route = "book_detail/{user_id}/{book_id}",
         title = "BookDetail"
     ) {
-        fun createRoute(userId: String, bookJson: String): String {
-            return "book_detail/${userId}/${Uri.encode(bookJson)}"
+        fun createRoute(userId: String, bookId: String): String {
+            return "book_detail/${userId}/${bookId}"
         }
 
-        fun getBook(arguments: Bundle?): Book {
-            val correctJson = Uri.decode(arguments?.getString("book_json"))
-            return Gson().fromJson(correctJson, Book::class.java)
+        fun getBookId(arguments: Bundle?): String {
+            return arguments?.getString("book_id") ?: ""
         }
     }
 

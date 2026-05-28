@@ -1,4 +1,4 @@
-package ru.itis.bookmatch.data.repository
+package ru.itis.bookmatch.domain.repository
 
 import kotlinx.coroutines.flow.Flow
 import ru.itis.bookmatch.domain.Book
@@ -7,7 +7,7 @@ interface LikedBooksRepository {
 
     fun getLikedBooksFlow(userId: String): Flow<List<Book>>
 
-    suspend fun getLikedBook(userId: String, bookId: String): Book
+    suspend fun getLikedBook(userId: String, bookId: String): Book?
 
     suspend fun addToLiked(userId: String, book: Book)
 

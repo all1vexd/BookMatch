@@ -1,4 +1,6 @@
-package ru.itis.bookmatch.domain
+package ru.itis.bookmatch.domain.repository
+
+import ru.itis.bookmatch.domain.Book
 
 interface BookRepository {
 

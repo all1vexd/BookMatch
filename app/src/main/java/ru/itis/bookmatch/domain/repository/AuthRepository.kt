@@ -1,4 +1,4 @@
-package ru.itis.bookmatch.data.repository
+package ru.itis.bookmatch.domain.repository
 
 import ru.itis.bookmatch.domain.AuthUser
 

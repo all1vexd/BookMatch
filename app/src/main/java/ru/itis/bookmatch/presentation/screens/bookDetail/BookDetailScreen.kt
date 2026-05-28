@@ -63,7 +63,7 @@ import ru.itis.bookmatch.domain.Book
 @Composable
 fun BookDetailScreen(
     userId: String,
-    book: Book,
+    bookId: String,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -71,10 +71,10 @@ fun BookDetailScreen(
     val appComponent = (context.applicationContext as BookMatchApplication).appComponent
 
     val viewModel: BookDetailScreenViewModel = viewModel(
-        key = "${userId}_${book.id}",
+        key = "${userId}_${bookId}",
         factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return appComponent.bookDetailScreenViewModelFactory().create(userId, book) as T
+                return appComponent.bookDetailScreenViewModelFactory().create(userId, bookId) as T
             }
         }
     )

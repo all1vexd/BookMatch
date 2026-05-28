@@ -1,7 +1,6 @@
-package ru.itis.bookmatch.data.repository
+package ru.itis.bookmatch.domain.repository
 
 import kotlinx.coroutines.flow.Flow
-import ru.itis.bookmatch.data.entity.ReadBookEntity
 import ru.itis.bookmatch.domain.ReadBook
 
 interface ReadBookRepository {

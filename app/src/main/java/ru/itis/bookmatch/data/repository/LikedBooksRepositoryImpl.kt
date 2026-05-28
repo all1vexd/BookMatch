@@ -10,6 +10,7 @@ import ru.itis.bookmatch.data.entity.LikedBookEntity
 import ru.itis.bookmatch.data.toBookModel
 import ru.itis.bookmatch.data.toLikedEntity
 import ru.itis.bookmatch.domain.Book
+import ru.itis.bookmatch.domain.repository.LikedBooksRepository
 import javax.inject.Inject
 
 class LikedBooksRepositoryImpl @Inject constructor(
@@ -38,8 +39,8 @@ class LikedBooksRepositoryImpl @Inject constructor(
     override suspend fun getLikedBook(
         userId: String,
         bookId: String
-    ): Book {
-        return (dao.getById(userId = userId, bookId = bookId))?.toBookModel() ?: throw Exception("Book not found")
+    ): Book? {
+        return (dao.getById(userId = userId, bookId = bookId))?.toBookModel()
     }
 
     override suspend fun addToLiked(userId: String, book: Book) {
