@@ -1,9 +1,11 @@
 package ru.itis.bookmatch
 
 import android.content.Context
+import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
 import ru.itis.bookmatch.data.BookDatabase
+import ru.itis.bookmatch.data.dao.CachedBookDao
 import ru.itis.bookmatch.data.dao.LikedBookDao
 import ru.itis.bookmatch.data.dao.ReadBookDao
 import javax.inject.Singleton
@@ -26,4 +28,13 @@ class DatabaseModule {
     fun provideReadBookDao(database: BookDatabase): ReadBookDao {
         return database.readBookDao()
     }
+
+    @Provides
+    fun provideCachedBookDao(database: BookDatabase): CachedBookDao {
+        return database.cachedBookDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGson(): Gson = Gson()
 }

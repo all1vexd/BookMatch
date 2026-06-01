@@ -16,7 +16,6 @@ import ru.itis.bookmatch.domain.likedUseCase.GetLikedBookUseCase
 import ru.itis.bookmatch.domain.likedUseCase.GetLikedBooksUseCase
 import ru.itis.bookmatch.domain.likedUseCase.RemoveFromLikedBooksUseCase
 import ru.itis.bookmatch.domain.readUseCase.AddToReadUseCase
-import ru.itis.bookmatch.presentation.screens.mainScreen.MainScreenState
 import javax.inject.Inject
 
 class SavedScreenViewModel @AssistedInject constructor(
@@ -70,9 +69,13 @@ class SavedScreenViewModel @AssistedInject constructor(
             is SavedScreenCommand.MarkAsRead -> {
                 viewModelScope.launch {
                     val book = getLikedBookUseCase(userId, command.bookId)
-                    val readBookModel = ReadBook(book)
-                    addToReadUseCase(userId, readBookModel)
-                    removeFromLikedBooksUseCase(userId, command.bookId)
+                    if (book != null) {
+                        val readBookModel = ReadBook(book)
+                        addToReadUseCase(userId, readBookModel)
+                        removeFromLikedBooksUseCase(userId, command.bookId)
+                    } else {
+                        throw Exception("Book not found")
+                    }
                 }
             }
         }

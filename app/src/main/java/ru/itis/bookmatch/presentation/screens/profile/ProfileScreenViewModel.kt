@@ -11,16 +11,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.itis.bookmatch.domain.Book
+import ru.itis.bookmatch.domain.LogoutUseCase
 import ru.itis.bookmatch.domain.ReadBook
 import ru.itis.bookmatch.domain.profileUseCase.GetUserNicknameUseCase
 import ru.itis.bookmatch.domain.likedUseCase.GetLikedBooksCountUseCase
-import ru.itis.bookmatch.domain.likedUseCase.GetLikedBooksUseCase
 import ru.itis.bookmatch.domain.profileUseCase.GetLastReadBooksUseCase
 import ru.itis.bookmatch.domain.profileUseCase.UpdateNickNameUseCase
 import ru.itis.bookmatch.domain.readUseCase.GetReadBooksCountUseCase
-import ru.itis.bookmatch.domain.readUseCase.GetReadBooksUseCase
-import ru.itis.bookmatch.presentation.screens.mainScreen.MainScreenState
+import ru.itis.bookmatch.presentation.screens.profile.ProfileScreenState.*
 
 class ProfileScreenViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: String,
@@ -28,7 +26,8 @@ class ProfileScreenViewModel @AssistedInject constructor(
     private val updateNickNameUseCase: UpdateNickNameUseCase,
     private val getReadBooksCountUseCase: GetReadBooksCountUseCase,
     private val getLikedBooksCountUseCase: GetLikedBooksCountUseCase,
-    private val getLastReadBooksUseCase: GetLastReadBooksUseCase
+    private val getLastReadBooksUseCase: GetLastReadBooksUseCase,
+    private val logoutUseCase: LogoutUseCase
 ): ViewModel() {
 
     @AssistedFactory
@@ -77,7 +76,7 @@ class ProfileScreenViewModel @AssistedInject constructor(
                             (it as ProfileScreenState.Content).copy(nickname = command.nickname, dialogUserId = null)
                         }
                     } catch (e: Exception) {
-                        _state.value = ProfileScreenState.Error(
+                        _state.value = Error(
                             errorMessage = e.message ?: ""
                         )
                     }
@@ -97,6 +96,11 @@ class ProfileScreenViewModel @AssistedInject constructor(
                     (it as ProfileScreenState.Content).copy(dialogUserId = userId)
                 }
             }
+
+            ProfileScreenCommand.Logout -> {
+                logoutUseCase()
+            }
+
         }
     }
 
@@ -109,6 +113,8 @@ sealed interface ProfileScreenCommand {
     data class EditNickname(val nickname: String): ProfileScreenCommand
 
     data object CloseEditingDialog: ProfileScreenCommand
+
+    data object Logout: ProfileScreenCommand
 }
 
 sealed interface ProfileScreenState {

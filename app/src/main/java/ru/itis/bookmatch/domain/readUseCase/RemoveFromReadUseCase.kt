@@ -1,6 +1,6 @@
 package ru.itis.bookmatch.domain.readUseCase
 
-import jakarta.inject.Inject
+import javax.inject.Inject
 import ru.itis.bookmatch.domain.repository.ReadBookRepository
 
 class RemoveFromReadUseCase @Inject constructor(

@@ -16,13 +16,15 @@ import ru.itis.bookmatch.domain.GetBooksForSwipeUseCase
 import ru.itis.bookmatch.domain.cachedUseCase.AddCachedBookUseCase
 import ru.itis.bookmatch.domain.cachedUseCase.DeleteAllBooksUseCase
 import ru.itis.bookmatch.domain.likedUseCase.AddToLikedUseCase
+import ru.itis.bookmatch.domain.readUseCase.IsReadUseCase
 
 class MainScreenViewModel @AssistedInject constructor(
     @Assisted("userId") private val userId: String,
     private val getBooksForSwipeUseCase: GetBooksForSwipeUseCase,
     private val addToLikedUseCase: AddToLikedUseCase,
     private val addCachedBookUseCase: AddCachedBookUseCase,
-    private val deleteAllBooksUseCase: DeleteAllBooksUseCase
+    private val deleteAllBooksUseCase: DeleteAllBooksUseCase,
+    private val isReadUseCase: IsReadUseCase
 ): ViewModel() {
 
     private var prefetchJob: Job? = null
@@ -80,6 +82,16 @@ class MainScreenViewModel @AssistedInject constructor(
             addCachedBookUseCase(userId = userId, book = book)
         }
         _state.value = MainScreenState.Content(bookList = freshBooks, currentIndex = 0)
+    }
+
+    fun checkCurrentBook() {
+        val currentState = _state.value as? MainScreenState.Content ?: return
+        val currentBook = currentState.bookList.getOrNull(currentState.currentIndex) ?: return
+        viewModelScope.launch {
+            if (isReadUseCase(userId = userId, bookId = currentBook.id)) {
+                goToNextBook()
+            }
+        }
     }
 
     fun processCommand(command: MainScreenCommand) {

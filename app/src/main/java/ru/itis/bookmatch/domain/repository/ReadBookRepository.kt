@@ -21,7 +21,7 @@ interface ReadBookRepository {
 
     suspend fun getBooksCount(userId: String): Int
 
-    suspend fun getLastReadBook(userId: String): Flow<List<ReadBook>>
+    fun getLastReadBook(userId: String): Flow<List<ReadBook>>
 
     suspend fun getById(userId: String, bookId: String): ReadBook?
 }

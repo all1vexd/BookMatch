@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.google.gson.Gson
 import ru.itis.bookmatch.domain.Book
@@ -81,6 +82,16 @@ sealed class Screen(
 
         fun getBookId(arguments: Bundle?): String {
             return arguments?.getString("book_id") ?: ""
+        }
+    }
+
+    data object Search : Screen(
+        route = "search/{user_id}",
+        title = "Search",
+        icon = Icons.Default.Search
+    ) {
+        fun createRoute(userId: String): String {
+            return "search/$userId"
         }
     }
 

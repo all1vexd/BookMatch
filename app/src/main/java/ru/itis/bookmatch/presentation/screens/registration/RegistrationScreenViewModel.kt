@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.itis.bookmatch.data.repository.AuthRepositoryImpl
 import ru.itis.bookmatch.domain.AuthUser
 import ru.itis.bookmatch.domain.RegisterUseCase
 import javax.inject.Inject

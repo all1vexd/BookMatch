@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
@@ -37,8 +38,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import ru.itis.bookmatch.presentation.ui.components.BookMatchTopBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -67,7 +67,8 @@ import ru.itis.bookmatch.domain.ReadBook
 fun ProfileScreen(
     userId: String,
     modifier: Modifier = Modifier,
-    onBookClick: (String) -> Unit
+    onBookClick: () -> Unit,
+    onLogOut: () -> Unit
 ) {
     val context = LocalContext.current
     val appComponent = (context.applicationContext as BookMatchApplication).appComponent
@@ -107,6 +108,7 @@ fun ProfileScreen(
 
         is ProfileScreenState.Content -> {
             val contentState = state as ProfileScreenState.Content
+            var showLogoutDialog by remember { mutableStateOf(false) }
 
             if (contentState.dialogUserId != null) {
                 EditNicknameDialog(
@@ -118,31 +120,44 @@ fun ProfileScreen(
                 )
             }
 
+            if (showLogoutDialog) {
+                AlertDialog(
+                    onDismissRequest = { showLogoutDialog = false },
+                    title = { Text("Выход") },
+                    text = { Text("Вы уверены, что хотите выйти?") },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                showLogoutDialog = false
+                                viewModel.processCommand(ProfileScreenCommand.Logout)
+                                onLogOut()
+                            }
+                        ) {
+                            Text("Выйти")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showLogoutDialog = false }) {
+                            Text("Отмена")
+                        }
+                    }
+                )
+            }
+
             Scaffold(
                 topBar = {
-                    TopAppBar(
-                        title = {
-                            Row(
-                                horizontalArrangement = Arrangement.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
+                    BookMatchTopBar(
+                        icon = Icons.Default.Person,
+                        title = "Profile",
+                        actions = {
+                            IconButton(onClick = { showLogoutDialog = true }) {
                                 Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "Profile",
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
+                                    imageVector = Icons.Default.ExitToApp,
+                                    contentDescription = "Logout",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.8f)
-                        )
+                        }
                     )
                 },
                 containerColor = MaterialTheme.colorScheme.background
@@ -229,8 +244,8 @@ fun ProfileScreen(
                             items(contentState.recentReadBooks) { readBook ->
                                 RecentBookCard(
                                     readBook = readBook,
-                                    onBookClick = { bookId ->
-                                        onBookClick(bookId)
+                                    onBookClick = {
+                                        onBookClick()
                                     }
                                 )
                             }
@@ -281,7 +296,7 @@ fun StatCard(
 @Composable
 fun RecentBookCard(
     readBook: ReadBook,
-    onBookClick: (String) -> Unit
+    onBookClick: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -289,7 +304,7 @@ fun RecentBookCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier.width(110.dp).height(200.dp)
             .clickable(
-                onClick = {onBookClick(readBook.book.id)}
+                onClick = {onBookClick()}
             )
     ) {
         Column {

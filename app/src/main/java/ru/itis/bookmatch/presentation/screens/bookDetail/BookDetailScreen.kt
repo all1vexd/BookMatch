@@ -55,7 +55,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
 import ru.itis.bookmatch.BookMatchApplication
 import ru.itis.bookmatch.domain.Book
 
@@ -129,14 +131,26 @@ fun BookDetailScreen(
                     contentPadding = PaddingValues(bottom = 32.dp)
                 ) {
                     item {
-                        AsyncImage(
+                        SubcomposeAsyncImage(
                             model = s.book.thumbnailUrl,
                             contentDescription = s.book.title,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(280.dp)
-                        )
+                        ) {
+                            when (painter.state) {
+                                is AsyncImagePainter.State.Loading -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
+                                }
+                                else -> SubcomposeAsyncImageContent()
+                            }
+                        }
                     }
 
                     item {

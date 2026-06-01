@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package ru.itis.bookmatch.presentation.screens.library
 
 import androidx.compose.foundation.background
@@ -23,21 +25,23 @@ import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.rememberModalBottomSheetState
+import ru.itis.bookmatch.presentation.ui.components.BookMatchTopBar
+import ru.itis.bookmatch.presentation.ui.components.EmptyStateScreen
+import ru.itis.bookmatch.presentation.ui.components.ErrorScreen
+import ru.itis.bookmatch.presentation.ui.components.LoadingScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -81,28 +85,21 @@ fun LibraryScreen(
         }
     )
 
+    val sheetState = rememberModalBottomSheetState()
+
     val state by viewModel.state.collectAsState()
 
     when (state) {
         is LibraryScreenState.Loading -> {
-            Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            LoadingScreen(modifier = modifier.fillMaxSize())
         }
 
         is LibraryScreenState.Error -> {
-            Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = (state as LibraryScreenState.Error).errorMessage,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = { viewModel.loadData() }) {
-                        Text("Retry")
-                    }
-                }
-            }
+            ErrorScreen(
+                message = (state as LibraryScreenState.Error).errorMessage,
+                onRetry = { viewModel.loadData() },
+                modifier = modifier.fillMaxSize()
+            )
         }
 
         is LibraryScreenState.Content -> {
@@ -111,53 +108,36 @@ fun LibraryScreen(
             if (contentState.dialogBookId != null) {
                 val book = contentState.readBooks.find { it.book.id == contentState.dialogBookId }
                 if (book != null) {
-                    ReviewDialog(
+                    ReviewBottomSheet(
                         readBook = book,
-                        onDismiss = { viewModel.processCommand(LibraryScreenCommand.CloseDialog) },
+                        sheetState = sheetState,
+                        onDismiss = {
+                            viewModel.processCommand(LibraryScreenCommand.CloseDialog)
+                        },
                         onSave = { rating, feedback ->
-                            viewModel.processCommand(
-                                LibraryScreenCommand.SaveReview(
-                                    bookId = book.book.id,
-                                    rating = rating,
-                                    feedback = feedback
-                                )
-                            )
+                            viewModel.processCommand(LibraryScreenCommand.SaveReview(
+                                bookId = book.book.id,
+                                rating = rating,
+                                feedback = feedback
+                            ))
                         }
                     )
                 }
             }
 
             Scaffold(
-                topBar = { LibraryTopBar() },
+                topBar = {
+                    BookMatchTopBar(icon = Icons.Default.AutoStories, title = "Read Books")
+                },
                 containerColor = MaterialTheme.colorScheme.background
             ) { paddingValues ->
                 if (contentState.readBooks.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxSize().padding(paddingValues),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Default.AutoStories,
-                                contentDescription = null,
-                                modifier = Modifier.size(80.dp),
-                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "No books read yet",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Mark books as read from your saved list",
-                                fontSize = 14.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                    EmptyStateScreen(
+                        icon = Icons.Default.AutoStories,
+                        title = "No books read yet",
+                        subtitle = "Mark books as read from your saved list",
+                        modifier = Modifier.fillMaxSize().padding(paddingValues)
+                    )
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize().padding(paddingValues),
@@ -181,43 +161,6 @@ fun LibraryScreen(
                 }
             }
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun LibraryTopBar() {
-    Column {
-        TopAppBar(
-            title = {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AutoStories,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Read Books",
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.8f)
-            )
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(MaterialTheme.colorScheme.onSurface.copy(0.3f))
-        )
     }
 }
 
@@ -323,67 +266,84 @@ fun ReadBookCard(
 }
 
 @Composable
-fun ReviewDialog(
+fun ReviewBottomSheet(
     readBook: ReadBook,
+    sheetState: SheetState,
     onDismiss: () -> Unit,
     onSave: (Double, String) -> Unit
 ) {
+
     var selectedRating by remember { mutableDoubleStateOf(readBook.rating) }
     var feedbackText by remember { mutableStateOf(readBook.feedback) }
 
-    AlertDialog(
+    ModalBottomSheet(
         onDismissRequest = onDismiss,
-        title = {
+        sheetState = sheetState
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp)
+        ) {
             Text(
                 text = readBook.book.title,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                fontWeight = FontWeight.Bold
+                overflow = TextOverflow.Ellipsis
             )
-        },
-        text = {
-            Column {
-                Text(
-                    text = "Your rating",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row {
-                    repeat(5) { index ->
-                        IconButton(
-                            onClick = { selectedRating = (index + 1).toDouble() },
-                            modifier = Modifier.size(36.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (index < selectedRating) Icons.Default.Star else Icons.Default.StarOutline,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Your rating",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row {
+                repeat(5) { index ->
+                    IconButton(
+                        onClick = {
+                            selectedRating = (index + 1).toDouble()
+                        },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (index < selectedRating) Icons.Default.Star else Icons.Default.StarOutline,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .size(28.dp)
+                        )
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(
-                    value = feedbackText,
-                    onValueChange = { feedbackText = it },
-                    label = { Text("Your review") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 3,
-                    maxLines = 5
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = feedbackText,
+                onValueChange = {
+                    feedbackText = it
+                },
+                label = {
+                    Text(
+                        text = "Your review"
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3,
+                maxLines = 5
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = {
+                    onSave(selectedRating, feedbackText)
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Save"
                 )
             }
-        },
-        confirmButton = {
-            Button(onClick = { onSave(selectedRating, feedbackText) }) {
-                Text("Save")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
         }
-    )
+    }
 }
