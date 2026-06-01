@@ -9,7 +9,7 @@ class GetLastReadBooksUseCase @Inject constructor(
     private val readBookRepository: ReadBookRepository
 ) {
 
-    suspend operator fun invoke(userId: String): Flow<List<ReadBook>> {
+    operator fun invoke(userId: String): Flow<List<ReadBook>> {
         return readBookRepository.getLastReadBook(userId = userId)
     }
 }

@@ -2,7 +2,6 @@
 
 package ru.itis.bookmatch.presentation.screens.mainScreen
 
-import android.R.attr.translationX
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -21,9 +20,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -44,6 +46,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -88,6 +93,13 @@ fun MainScreen(
     )
 
     val state by viewModel.state.collectAsState()
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.checkCurrentBook()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -224,30 +236,6 @@ fun MainTopBar(
                     )
                 }
             },
-            navigationIcon = {
-                IconButton(
-                    onClick = {
-                        TODO("Открыть профиль")
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Person"
-                    )
-                }
-            },
-            actions = {
-                IconButton(
-                    onClick = {
-                        TODO("Открыть поиск")
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search"
-                    )
-                }
-            },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.8f)
             )
@@ -339,7 +327,6 @@ fun CardStack(
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
-                android.util.Log.d("BookImage", "url: $highQualityUrl")
                 if (highQualityUrl.isNotEmpty()) {
                     AsyncImage(
                         model = highQualityUrl,
@@ -431,13 +418,43 @@ fun CardStack(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "← Swipe left to skip  |  Swipe right to like →",
-                        fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = null,
+                            tint = Color(0xFFE57373),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = "Skip",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFFE57373)
+                        )
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "Like",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF81C784)
+                        )
+                        Icon(
+                            imageVector = Icons.Default.Favorite,
+                            contentDescription = null,
+                            tint = Color(0xFF81C784),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         }

@@ -33,8 +33,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import ru.itis.bookmatch.presentation.ui.components.BookMatchTopBar
+import ru.itis.bookmatch.presentation.ui.components.EmptyStateScreen
+import ru.itis.bookmatch.presentation.ui.components.ErrorScreen
+import ru.itis.bookmatch.presentation.ui.components.LoadingScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -55,7 +57,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import ru.itis.bookmatch.BookMatchApplication
 import ru.itis.bookmatch.data.toHighQualityUrl
-import ru.itis.bookmatch.data.toLikedEntity
 import ru.itis.bookmatch.domain.Book
 
 @Composable
@@ -81,43 +82,18 @@ fun SavedScreen(
         is SavedScreenState.Content -> {
             Scaffold(
                 topBar = {
-                    SavedTopBar()
+                    BookMatchTopBar(icon = Icons.Default.Bookmark, title = "Saved Books")
                 },
                 containerColor = MaterialTheme.colorScheme.background
             ) { paddingValues ->
 
                 if ((state as SavedScreenState.Content).likedBooks.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Bookmark,
-                                contentDescription = "No saved books",
-                                modifier = Modifier.size(80.dp),
-                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "No saved books yet",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Swipe right on books to save them",
-                                fontSize = 14.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                    EmptyStateScreen(
+                        icon = Icons.Default.Bookmark,
+                        title = "No saved books yet",
+                        subtitle = "Swipe right on books to save them",
+                        modifier = Modifier.fillMaxSize().padding(paddingValues)
+                    )
                 } else {
                     LazyColumn(
                         modifier = Modifier
@@ -145,71 +121,18 @@ fun SavedScreen(
             }
         }
         is SavedScreenState.Error -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Error: ${(state as SavedScreenState.Error).errorMessage}",
-                        color = MaterialTheme.colorScheme.error
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = { viewModel.loadData() }) {
-                        Text("Retry")
-                    }
-                }
-            }
+            ErrorScreen(
+                message = "Error: ${(state as SavedScreenState.Error).errorMessage}",
+                onRetry = { viewModel.loadData() },
+                modifier = Modifier.fillMaxSize()
+            )
         }
         SavedScreenState.Loading -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
+            LoadingScreen(modifier = Modifier.fillMaxSize())
         }
     }
 
 
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SavedTopBar() {
-    Column {
-        TopAppBar(
-            title = {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Bookmark,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Saved Books",
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.8f)
-            )
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(MaterialTheme.colorScheme.onSurface.copy(0.3f))
-        )
-    }
 }
 
 @Composable

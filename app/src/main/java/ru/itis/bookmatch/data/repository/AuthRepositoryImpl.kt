@@ -21,14 +21,20 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun register(email: String, password: String, nickname: String): AuthUser {
         val result = auth.createUserWithEmailAndPassword(email, password).await()
         val user = result.user ?: throw Exception("Ошибка при регистрации")
-        try {
-            firestore.collection("users")
-                .document(user.uid)
-                .set(mapOf("nickname" to nickname))
-                .await()
-        } catch (e: Exception) {
-
-        }
+        firestore.collection("users")
+            .document(user.uid)
+            .set(mapOf("nickname" to nickname))
+            .await()
         return AuthUser(uid = user.uid)
+    }
+
+    override fun getCurrentUser(): AuthUser? {
+        return auth.currentUser?.let {
+            AuthUser(uid = it.uid)
+        }
+    }
+
+    override fun logout() {
+        auth.signOut()
     }
 }

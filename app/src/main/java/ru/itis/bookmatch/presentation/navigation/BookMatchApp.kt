@@ -8,11 +8,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.gson.Gson
+import ru.itis.bookmatch.BookMatchApplication
 import ru.itis.bookmatch.presentation.screens.BottomBar
 import ru.itis.bookmatch.presentation.screens.Screen
 import ru.itis.bookmatch.presentation.screens.bookDetail.BookDetailScreen
@@ -22,14 +24,23 @@ import ru.itis.bookmatch.presentation.screens.mainScreen.MainScreen
 import ru.itis.bookmatch.presentation.screens.profile.ProfileScreen
 import ru.itis.bookmatch.presentation.screens.registration.RegistrationScreen
 import ru.itis.bookmatch.presentation.screens.saved.SavedScreen
+import ru.itis.bookmatch.presentation.screens.search.SearchScreen
+import javax.inject.Inject
 
 @Composable
 fun BookMatchApp() {
     val navController = rememberNavController()
 
-    var currentUserId by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val appComponent = (context.applicationContext as BookMatchApplication).appComponent
+    val auth = appComponent.getCurrentUserUseCase()
+    val savedUser = auth()
+
+    var currentUserId by remember { mutableStateOf(savedUser?.uid ?: "") }
     var currentRoute by remember {
-        mutableStateOf(Screen.Login.route)
+        mutableStateOf(
+            if (savedUser != null) Screen.Discover.createRoute(currentUserId) else Screen.Login.route
+        )
     }
 
     navController.addOnDestinationChangedListener { _, destination, _ ->
@@ -38,7 +49,7 @@ fun BookMatchApp() {
 
     val shouldShowBottomBar = currentRoute.startsWith("discover/") ||
             currentRoute.startsWith("saved/") ||
-            currentRoute.startsWith("library/") ||
+            currentRoute.startsWith("search/") ||
             currentRoute.startsWith("profile/")
 
     Column(
@@ -46,7 +57,7 @@ fun BookMatchApp() {
     ) {
         NavHost(
             navController = navController,
-            startDestination = Screen.Login.route,
+            startDestination = if (savedUser == null) Screen.Login.route else Screen.Discover.createRoute(userId = currentUserId),
             modifier = Modifier.weight(1f)
         ) {
             composable(Screen.Login.route) {
@@ -118,12 +129,22 @@ fun BookMatchApp() {
             composable(Screen.Profile.route) {
                 ProfileScreen(
                     userId = currentUserId,
-                    onBookClick = { bookId ->
+                    onBookClick = {
+                        navController.navigate(Screen.Library.createRoute(userId = currentUserId))
+                    },
+                    onLogOut = {
+                        navController.navigate(Screen.Login.route)
+                    }
+                )
+            }
+            composable(Screen.Search.route) {
+                SearchScreen(
+                    userId = currentUserId,
+                    onBookClick = {
                         navController.navigate(Screen.BookDetail.createRoute(
                             userId = currentUserId,
-                            bookId = bookId
-                            )
-                        )
+                            bookId = it
+                        ))
                     }
                 )
             }
@@ -144,7 +165,7 @@ fun BookMatchApp() {
                 selected = when {
                     currentRoute.startsWith("discover/") -> Screen.Discover
                     currentRoute.startsWith("saved/") -> Screen.Saved
-                    currentRoute.startsWith("library/") -> Screen.Library
+                    currentRoute.startsWith("search/") -> Screen.Search
                     currentRoute.startsWith("profile/") -> Screen.Profile
                     else -> Screen.Discover
                 },
@@ -153,7 +174,7 @@ fun BookMatchApp() {
                         is Screen.Discover -> {
                             screen.createRoute(currentUserId)
                         }
-                        is Screen.Library -> {
+                        is Screen.Search -> {
                             screen.createRoute(currentUserId)
                         }
                         is Screen.Profile -> {

@@ -5,10 +5,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
+import ru.itis.bookmatch.data.BookMapper
 import ru.itis.bookmatch.data.dao.ReadBookDao
 import ru.itis.bookmatch.data.entity.ReadBookEntity
-import ru.itis.bookmatch.data.toBookModel
-import ru.itis.bookmatch.data.toReadEntity
 import ru.itis.bookmatch.domain.ReadBook
 import ru.itis.bookmatch.domain.repository.ReadBookRepository
 import javax.inject.Inject
@@ -16,7 +15,8 @@ import javax.inject.Inject
 class ReadBookRepositoryImpl @Inject constructor(
     context: Context,
     private val firestore: FirebaseFirestore,
-    private val dao: ReadBookDao
+    private val dao: ReadBookDao,
+    private val mapper: BookMapper
 ): ReadBookRepository {
 
     private val prefs = context.getSharedPreferences("syncTime", Context.MODE_PRIVATE)
@@ -32,13 +32,13 @@ class ReadBookRepositoryImpl @Inject constructor(
     override fun getReadBooksFlow(userId: String): Flow<List<ReadBook>> {
         return dao.getByUserId(userId).map { entityList ->
             entityList.map {
-                it.toBookModel()
+                mapper.fromReadEntity(it)
             }
         }
     }
 
     override suspend fun addToRead(userId: String, readBook: ReadBook) {
-        val entity = readBook.toReadEntity(userId)
+        val entity = mapper.toReadEntity(readBook, userId)
         dao.insert(entity)
     }
 
@@ -90,6 +90,7 @@ class ReadBookRepositoryImpl @Inject constructor(
             }
             saveLastSyncTime(userId = userId, time = System.currentTimeMillis())
         } catch (e: Exception) {
+            android.util.Log.e("ReadBookRepo", "Failed to sync with Firestore", e)
         }
     }
 
@@ -97,10 +98,10 @@ class ReadBookRepositoryImpl @Inject constructor(
         return dao.getBooksCount(userId)
     }
 
-    override suspend fun getLastReadBook(userId: String): Flow<List<ReadBook>> {
+    override fun getLastReadBook(userId: String): Flow<List<ReadBook>> {
         return dao.getLastReadBooks(userId = userId).map { bookList ->
             bookList.map {
-                it.toBookModel()
+                mapper.fromReadEntity(it)
             }
         }
     }
@@ -109,6 +110,6 @@ class ReadBookRepositoryImpl @Inject constructor(
         userId: String,
         bookId: String
     ): ReadBook? {
-        return dao.getById(userId,bookId)?.toBookModel()
+        return dao.getById(userId, bookId)?.let { mapper.fromReadEntity(it) }
     }
 }

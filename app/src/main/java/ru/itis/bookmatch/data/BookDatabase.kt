@@ -26,7 +26,7 @@ abstract class BookDatabase: RoomDatabase() {
     companion object {
 
         private var instance: BookDatabase? = null
-        private var LOCK = Any()
+        private val LOCK = Any()
 
         fun getInstance(context: Context): BookDatabase {
 

@@ -19,8 +19,16 @@ class GetBooksForSwipeUseCase @Inject constructor(
 
         val books = coroutineScope {
             queries
-                .map { query -> async { runCatching { bookRepository.getBookForSwipe(query = query, startIndex = startIndex) }.getOrDefault(emptyList()) } }
-                .flatMap { it.await() }
+                .map { query ->
+                    async {
+                        runCatching {
+                            bookRepository.getBookForSwipe(query = query, startIndex = startIndex)
+                        }.getOrDefault(emptyList())
+                    }
+                }
+                .flatMap {
+                    it.await()
+                }
                 .shuffled()
         }
 
