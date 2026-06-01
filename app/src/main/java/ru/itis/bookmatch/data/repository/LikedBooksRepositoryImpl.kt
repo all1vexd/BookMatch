@@ -5,38 +5,46 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
-import ru.itis.bookmatch.data.BookDatabase
+import ru.itis.bookmatch.data.BookMapper
+import ru.itis.bookmatch.data.dao.LikedBookDao
 import ru.itis.bookmatch.data.entity.LikedBookEntity
-import ru.itis.bookmatch.data.toBookModel
-import ru.itis.bookmatch.data.toLikedEntity
 import ru.itis.bookmatch.domain.Book
+import ru.itis.bookmatch.domain.repository.LikedBooksRepository
+import javax.inject.Inject
 
-class LikedBooksRepositoryImpl (
+class LikedBooksRepositoryImpl @Inject constructor(
     context: Context,
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val firestore: FirebaseFirestore,
+    private val dao: LikedBookDao,
+    private val mapper: BookMapper
 ): LikedBooksRepository {
     private val prefs = context.getSharedPreferences("syncTime", Context.MODE_PRIVATE)
-    private val database = BookDatabase.getInstance(context)
-    private val dao = database.likedBookDao()
 
     private fun getLastSyncTime(userId: String): Long {
-        return prefs.getLong("last_sync_time_${userId}", 0L)
+        return prefs.getLong("liked_last_sync_time_${userId}", 0L)
     }
 
     private fun saveLastSyncTime(userId: String, time: Long) {
-        prefs.edit().putLong("last_sync_time_${userId}", time).apply()
+        prefs.edit().putLong("liked_last_sync_time_${userId}", time).apply()
     }
 
     override fun getLikedBooksFlow(userId: String): Flow<List<Book>> {
         return dao.getByUserId(userId).map { likedBookEntitiesList ->
             likedBookEntitiesList.map {
-                it.toBookModel()
+                mapper.fromLikedEntity(it)
             }
         }
     }
 
+    override suspend fun getLikedBook(
+        userId: String,
+        bookId: String
+    ): Book? {
+        return dao.getById(userId = userId, bookId = bookId)?.let { mapper.fromLikedEntity(it) }
+    }
+
     override suspend fun addToLiked(userId: String, book: Book) {
-        val entity = book.toLikedEntity(userId)
+        val entity = mapper.toLikedEntity(book, userId)
         dao.insert(entity)
 
         try {
@@ -48,6 +56,7 @@ class LikedBooksRepositoryImpl (
                 .await()
             dao.markAsSynced(userId, entity.bookId)
         } catch (e: Exception) {
+            android.util.Log.e("LikedBooksRepo", "Failed to sync addToLiked with Firestore", e)
         }
     }
 
@@ -66,7 +75,7 @@ class LikedBooksRepositoryImpl (
                 .delete()
                 .await()
         } catch (e: Exception) {
-
+            android.util.Log.e("LikedBooksRepo", "Failed to sync deleteFromLiked with Firestore", e)
         }
     }
 
@@ -100,6 +109,11 @@ class LikedBooksRepositoryImpl (
             saveLastSyncTime(userId, System.currentTimeMillis())
 
         } catch (e: Exception) {
+            android.util.Log.e("LikedBooksRepo", "Failed to sync with Firestore", e)
         }
+    }
+
+    override suspend fun getBooksCount(userId: String): Int {
+        return dao.getBooksCount(userId)
     }
 }

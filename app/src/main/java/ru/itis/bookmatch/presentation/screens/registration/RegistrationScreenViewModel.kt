@@ -6,17 +6,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import ru.itis.bookmatch.data.repository.AuthRepositoryImpl
 import ru.itis.bookmatch.domain.AuthUser
 import ru.itis.bookmatch.domain.RegisterUseCase
+import javax.inject.Inject
 
-class RegistrationScreenViewModel(
-    private val registerUseCase: RegisterUseCase = RegisterUseCase(AuthRepositoryImpl())
+class RegistrationScreenViewModel @Inject constructor(
+    private val registerUseCase: RegisterUseCase
 ): ViewModel() {
 
     private val _state = MutableStateFlow<RegistrationScreenState>(RegistrationScreenState.Content(
         email = "",
-        password = ""
+        password = "",
+        nickname = ""
     ))
     val state = _state.asStateFlow()
 
@@ -33,6 +34,10 @@ class RegistrationScreenViewModel(
             RegistrationScreenCommand.RegisterClicked -> {
                 registerUser()
             }
+
+            is RegistrationScreenCommand.NicknameInput -> {
+                updateState(nickname = command.nick.trim())
+            }
         }
     }
 
@@ -41,6 +46,7 @@ class RegistrationScreenViewModel(
         val currentState = _state.value as? RegistrationScreenState.Content ?: return
         val email = currentState.email
         val password = currentState.password
+        val nickname = currentState.nickname
         when {
             email.isEmpty() -> {
                 _state.update {
@@ -63,6 +69,20 @@ class RegistrationScreenViewModel(
                 return
             }
 
+            nickname.isEmpty() -> {
+                _state.update {
+                    RegistrationScreenState.Error("Введите имя пользователя")
+                }
+                return
+            }
+
+            nickname.length < 6 -> {
+                _state.update {
+                    RegistrationScreenState.Error("Имя должно содержать минимум 6 символов")
+                }
+                return
+            }
+
             !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
                 _state.update {
                     RegistrationScreenState.Error("Введите корректный email")
@@ -78,7 +98,7 @@ class RegistrationScreenViewModel(
                 RegistrationScreenState.Loading
             }
             try {
-                val user = registerUseCase(email, password)
+                val user = registerUseCase(email, password, nickname)
                 _state.update {
                     RegistrationScreenState.Success(user)
                 }
@@ -92,20 +112,15 @@ class RegistrationScreenViewModel(
         }
     }
 
-    private fun updateState(email: String? = null, password: String? = null) {
+    private fun updateState(email: String? = null, password: String? = null, nickname: String? = null) {
 
-        val currentState = _state.value
-        val currentEmail =  if (currentState is RegistrationScreenState.Content) {
-            currentState.email
-        } else ""
-        val currentPassword =  if (currentState is RegistrationScreenState.Content) {
-            currentState.password
-        } else ""
+        val currentState = _state.value as? RegistrationScreenState.Content ?: return
 
         _state.update {
             RegistrationScreenState.Content(
-                email = email ?: currentEmail,
-                password = password ?: currentPassword
+                email = email ?: currentState.email,
+                password = password ?: currentState.password,
+                nickname = nickname ?: currentState.nickname
             )
         }
     }
@@ -118,6 +133,9 @@ sealed interface RegistrationScreenCommand {
 
     data class EmailInput(val email: String): RegistrationScreenCommand
 
+
+    data class NicknameInput(val nick: String): RegistrationScreenCommand
+
     data object RegisterClicked : RegistrationScreenCommand
 }
 
@@ -127,7 +145,8 @@ sealed interface RegistrationScreenState{
 
     data class Content(
         val email: String,
-        val password: String
+        val password: String,
+        val nickname: String
     ): RegistrationScreenState
 
     data object Loading: RegistrationScreenState

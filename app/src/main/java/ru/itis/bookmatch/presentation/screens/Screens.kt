@@ -1,12 +1,16 @@
 package ru.itis.bookmatch.presentation.screens
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.google.gson.Gson
+import ru.itis.bookmatch.domain.Book
 
 sealed class Screen(
     val route: String,
@@ -67,4 +71,28 @@ sealed class Screen(
         route = "login",
         title = "Login"
     )
+
+    data object BookDetail : Screen(
+        route = "book_detail/{user_id}/{book_id}",
+        title = "BookDetail"
+    ) {
+        fun createRoute(userId: String, bookId: String): String {
+            return "book_detail/${userId}/${bookId}"
+        }
+
+        fun getBookId(arguments: Bundle?): String {
+            return arguments?.getString("book_id") ?: ""
+        }
+    }
+
+    data object Search : Screen(
+        route = "search/{user_id}",
+        title = "Search",
+        icon = Icons.Default.Search
+    ) {
+        fun createRoute(userId: String): String {
+            return "search/$userId"
+        }
+    }
+
 }

@@ -1,6 +1,5 @@
 package ru.itis.bookmatch.presentation.navigation
 
-import android.content.Context
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -14,30 +13,34 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import ru.itis.bookmatch.data.repository.BookRepositoryImpl
-import ru.itis.bookmatch.data.repository.LikedBooksRepositoryImpl
-import ru.itis.bookmatch.domain.Book
-import ru.itis.bookmatch.domain.GetBooksForSwipeUseCase
-import ru.itis.bookmatch.domain.likedUseCase.AddToLikedUseCase
-import ru.itis.bookmatch.domain.likedUseCase.GetLikedBooksUseCase
-import ru.itis.bookmatch.domain.likedUseCase.RemoveFromLikedBooksUseCase
+import com.google.gson.Gson
+import ru.itis.bookmatch.BookMatchApplication
 import ru.itis.bookmatch.presentation.screens.BottomBar
 import ru.itis.bookmatch.presentation.screens.Screen
+import ru.itis.bookmatch.presentation.screens.bookDetail.BookDetailScreen
 import ru.itis.bookmatch.presentation.screens.library.LibraryScreen
 import ru.itis.bookmatch.presentation.screens.login.LoginScreen
 import ru.itis.bookmatch.presentation.screens.mainScreen.MainScreen
 import ru.itis.bookmatch.presentation.screens.profile.ProfileScreen
 import ru.itis.bookmatch.presentation.screens.registration.RegistrationScreen
 import ru.itis.bookmatch.presentation.screens.saved.SavedScreen
+import ru.itis.bookmatch.presentation.screens.search.SearchScreen
+import javax.inject.Inject
 
 @Composable
 fun BookMatchApp() {
-    val context = LocalContext.current
     val navController = rememberNavController()
 
-    var currentUserId by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val appComponent = (context.applicationContext as BookMatchApplication).appComponent
+    val auth = appComponent.getCurrentUserUseCase()
+    val savedUser = auth()
+
+    var currentUserId by remember { mutableStateOf(savedUser?.uid ?: "") }
     var currentRoute by remember {
-        mutableStateOf(Screen.Discover.route)
+        mutableStateOf(
+            if (savedUser != null) Screen.Discover.createRoute(currentUserId) else Screen.Login.route
+        )
     }
 
     navController.addOnDestinationChangedListener { _, destination, _ ->
@@ -46,7 +49,7 @@ fun BookMatchApp() {
 
     val shouldShowBottomBar = currentRoute.startsWith("discover/") ||
             currentRoute.startsWith("saved/") ||
-            currentRoute.startsWith("library/") ||
+            currentRoute.startsWith("search/") ||
             currentRoute.startsWith("profile/")
 
     Column(
@@ -54,7 +57,7 @@ fun BookMatchApp() {
     ) {
         NavHost(
             navController = navController,
-            startDestination = Screen.Login.route,
+            startDestination = if (savedUser == null) Screen.Login.route else Screen.Discover.createRoute(userId = currentUserId),
             modifier = Modifier.weight(1f)
         ) {
             composable(Screen.Login.route) {
@@ -69,8 +72,7 @@ fun BookMatchApp() {
                     },
                     moveToRegister = {
                         navController.navigate(Screen.Registration.route)
-                    },
-                    context = context
+                    }
                 )
             }
             composable(Screen.Registration.route) {
@@ -91,40 +93,79 @@ fun BookMatchApp() {
             composable(Screen.Discover.route) {
                 MainScreen(
                     userId = currentUserId,
-                    getBooksForSwipeUseCase = GetBooksForSwipeUseCase(BookRepositoryImpl()),
-                    addToLikedUseCase = AddToLikedUseCase(
-                        repository = LikedBooksRepositoryImpl(context)
-                    )
+                    onBookClick = { bookId ->
+                        navController.navigate(Screen.BookDetail.createRoute(
+                            userId = currentUserId,
+                            bookId = bookId
+                            )
+                        )
+                    }
                 )
             }
             composable(Screen.Saved.route) {
                 SavedScreen(
                     userId = currentUserId,
-                    removeFromLikedBooksUseCase = RemoveFromLikedBooksUseCase(
-                        repository = LikedBooksRepositoryImpl(context)
-                    ),
-                    getLikedBooksUseCase = GetLikedBooksUseCase(
-                        repository = LikedBooksRepositoryImpl(context)
-                        ),
                     onBookClick = { bookId ->
-                        TODO("Сделать")
+                        navController.navigate(Screen.BookDetail.createRoute(
+                            userId = currentUserId,
+                            bookId = bookId
+                            )
+                        )
                     }
                 )
             }
             composable(Screen.Library.route) {
-                LibraryScreen()
+                LibraryScreen(
+                    userId = currentUserId,
+                    onBookClick = { bookId ->
+                        navController.navigate(Screen.BookDetail.createRoute(
+                            userId = currentUserId,
+                            bookId = bookId
+                            )
+                        )
+                    }
+                )
             }
             composable(Screen.Profile.route) {
-                ProfileScreen()
+                ProfileScreen(
+                    userId = currentUserId,
+                    onBookClick = {
+                        navController.navigate(Screen.Library.createRoute(userId = currentUserId))
+                    },
+                    onLogOut = {
+                        navController.navigate(Screen.Login.route)
+                    }
+                )
+            }
+            composable(Screen.Search.route) {
+                SearchScreen(
+                    userId = currentUserId,
+                    onBookClick = {
+                        navController.navigate(Screen.BookDetail.createRoute(
+                            userId = currentUserId,
+                            bookId = it
+                        ))
+                    }
+                )
+            }
+            composable(Screen.BookDetail.route) {backStackEntry ->
+                BookDetailScreen(
+                    userId = currentUserId,
+                    bookId = Screen.BookDetail.getBookId(backStackEntry.arguments),
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
             }
         }
+
 
         if (shouldShowBottomBar) {
             BottomBar(
                 selected = when {
                     currentRoute.startsWith("discover/") -> Screen.Discover
                     currentRoute.startsWith("saved/") -> Screen.Saved
-                    currentRoute.startsWith("library/") -> Screen.Library
+                    currentRoute.startsWith("search/") -> Screen.Search
                     currentRoute.startsWith("profile/") -> Screen.Profile
                     else -> Screen.Discover
                 },
@@ -133,7 +174,7 @@ fun BookMatchApp() {
                         is Screen.Discover -> {
                             screen.createRoute(currentUserId)
                         }
-                        is Screen.Library -> {
+                        is Screen.Search -> {
                             screen.createRoute(currentUserId)
                         }
                         is Screen.Profile -> {

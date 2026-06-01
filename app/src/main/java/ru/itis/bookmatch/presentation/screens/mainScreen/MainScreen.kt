@@ -2,8 +2,8 @@
 
 package ru.itis.bookmatch.presentation.screens.mainScreen
 
-import android.R.attr.translationX
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,9 +20,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,22 +40,32 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.imageLoader
+import coil.request.ImageRequest
+import ru.itis.bookmatch.BookMatchApplication
 import ru.itis.bookmatch.data.toHighQualityUrl
 import ru.itis.bookmatch.domain.Book
 import ru.itis.bookmatch.domain.GetBooksForSwipeUseCase
@@ -64,18 +77,29 @@ import ru.itis.bookmatch.presentation.screens.Screen
 @Composable
 fun MainScreen(
     userId: String,
-    getBooksForSwipeUseCase: GetBooksForSwipeUseCase,
-    addToLikedUseCase: AddToLikedUseCase,
     modifier: Modifier = Modifier,
-    viewModel: MainScreenViewModel = viewModel() {
-        MainScreenViewModel(
-            userId = userId,
-            getBooksForSwipeUseCase = getBooksForSwipeUseCase,
-            addToLikedUseCase = addToLikedUseCase
-        )
-    }
+    onBookClick: (String) -> Unit
 ) {
+    val context = LocalContext.current
+    val appComponent = (context.applicationContext as BookMatchApplication).appComponent
+
+    val viewModel: MainScreenViewModel = viewModel(
+        key = userId,
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return appComponent.mainScreenViewModelFactory().create(userId) as T
+            }
+        }
+    )
+
     val state by viewModel.state.collectAsState()
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.checkCurrentBook()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -133,6 +157,18 @@ fun MainScreen(
                     val contentState = state as MainScreenState.Content
                     val currentBook = contentState.bookList.getOrNull(contentState.currentIndex)
 
+                    LaunchedEffect(contentState.currentIndex) {
+                        contentState.bookList
+                            .drop(contentState.currentIndex + 1)
+                            .take(3)
+                            .forEach { book ->
+                                val request = ImageRequest.Builder(context)
+                                    .data(toHighQualityUrl(book.thumbnailUrl))
+                                    .build()
+                                context.imageLoader.enqueue(request)
+                            }
+                    }
+
                     if (currentBook != null) {
                         CardStack(
                             modifier = Modifier.padding(top = 16.dp),
@@ -142,6 +178,9 @@ fun MainScreen(
                             },
                             onSwipeRight = {
                                 viewModel.processCommand(MainScreenCommand.RightSwipe)
+                            },
+                            onBookClick = {bookId ->
+                                onBookClick(bookId)
                             }
                         )
                     } else {
@@ -197,30 +236,6 @@ fun MainTopBar(
                     )
                 }
             },
-            navigationIcon = {
-                IconButton(
-                    onClick = {
-                        TODO("Открыть профиль")
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Person"
-                    )
-                }
-            },
-            actions = {
-                IconButton(
-                    onClick = {
-                        TODO("Открыть поиск")
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search"
-                    )
-                }
-            },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.8f)
             )
@@ -240,8 +255,9 @@ fun MainTopBar(
 fun CardStack(
     modifier: Modifier = Modifier,
     book: Book?,
-    onSwipeRight: () -> Unit = {},
-    onSwipeLeft: () -> Unit = {}
+    onSwipeRight: () -> Unit,
+    onSwipeLeft: () -> Unit,
+    onBookClick: (String) -> Unit
 ) {
 
     if (book == null) {
@@ -292,6 +308,12 @@ fun CardStack(
                     }
                 )
             }
+            .clickable(
+                enabled = true,
+                onClick = {
+                    onBookClick(book.id)
+                }
+            )
     ) {
         Column(
             modifier = Modifier
@@ -396,13 +418,43 @@ fun CardStack(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "← Swipe left to skip  |  Swipe right to like →",
-                        fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = null,
+                            tint = Color(0xFFE57373),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = "Skip",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFFE57373)
+                        )
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "Like",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF81C784)
+                        )
+                        Icon(
+                            imageVector = Icons.Default.Favorite,
+                            contentDescription = null,
+                            tint = Color(0xFF81C784),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         }

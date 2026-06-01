@@ -3,21 +3,35 @@ package ru.itis.bookmatch.presentation.screens.saved
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import ru.itis.bookmatch.domain.Book
+import ru.itis.bookmatch.domain.ReadBook
+import ru.itis.bookmatch.domain.likedUseCase.GetLikedBookUseCase
 import ru.itis.bookmatch.domain.likedUseCase.GetLikedBooksUseCase
 import ru.itis.bookmatch.domain.likedUseCase.RemoveFromLikedBooksUseCase
-import ru.itis.bookmatch.presentation.screens.mainScreen.MainScreenState
+import ru.itis.bookmatch.domain.readUseCase.AddToReadUseCase
+import javax.inject.Inject
 
-class SavedScreenViewModel(
-    private val userId: String,
+class SavedScreenViewModel @AssistedInject constructor(
+    @Assisted("userId") private val userId: String,
     private val removeFromLikedBooksUseCase: RemoveFromLikedBooksUseCase,
-    private val getLikedBooksUseCase: GetLikedBooksUseCase
+    private val getLikedBooksUseCase: GetLikedBooksUseCase,
+    private val getLikedBookUseCase: GetLikedBookUseCase,
+    private val addToReadUseCase: AddToReadUseCase
 ): ViewModel() {
 
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("userId") userId: String
+        ): SavedScreenViewModel
+    }
     private val _state = MutableStateFlow<SavedScreenState>(SavedScreenState.Loading)
     val state = _state.asStateFlow()
 
@@ -44,12 +58,24 @@ class SavedScreenViewModel(
 
     fun processCommand(command: SavedScreenCommand) {
         when (command) {
-            SavedScreenCommand.BookClick -> {
-                TODO("Открыть экран подробной информации")
-            }
             is SavedScreenCommand.RemoveBook -> {
                 viewModelScope.launch {
                     removeFromLikedBooksUseCase(userId, command.bookId)
+                }
+            }
+            is SavedScreenCommand.BookClick -> {
+
+            }
+            is SavedScreenCommand.MarkAsRead -> {
+                viewModelScope.launch {
+                    val book = getLikedBookUseCase(userId, command.bookId)
+                    if (book != null) {
+                        val readBookModel = ReadBook(book)
+                        addToReadUseCase(userId, readBookModel)
+                        removeFromLikedBooksUseCase(userId, command.bookId)
+                    } else {
+                        throw Exception("Book not found")
+                    }
                 }
             }
         }
@@ -61,7 +87,9 @@ sealed interface SavedScreenCommand {
 
     data class RemoveBook(val bookId: String): SavedScreenCommand
 
-    data object BookClick: SavedScreenCommand
+    data class BookClick(val bookId: String): SavedScreenCommand
+
+    data class MarkAsRead(val bookId: String): SavedScreenCommand
 }
 
 sealed interface SavedScreenState {
